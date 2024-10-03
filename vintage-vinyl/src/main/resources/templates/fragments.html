@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <title th:text="${title}">Vintage Vinyl</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+<nav th:fragment="navigation" class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="/">Vintage Vinyl</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            <!-- Visible to all authenticated users -->
+            <li class="nav-item">
+                <a class="nav-link" href="/records">Records</a>
+            </li>
+
+            <!-- Cart: Visible only to non-admin users -->
+            <li class="nav-item" sec:authorize="isAuthenticated() and !hasRole('ADMIN')">
+                <a class="nav-link" href="/cart">
+                    <i class="fas fa-shopping-cart"></i> Cart
+                    <span class="badge badge-pill badge-primary" th:text="${cartItemCount}">0</span>
+                </a>
+            </li>
+
+            <!-- Dashboard: Visible to all authenticated users -->
+            <li class="nav-item" sec:authorize="isAuthenticated()">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+            </li>
+
+            <!-- Admin Console: Visible only to admins -->
+            <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                <a class="nav-link" href="/admin">Admin Console</a>
+            </li>
+
+            <!-- Login: Visible only to unauthenticated users -->
+            <li class="nav-item" sec:authorize="!isAuthenticated()">
+                <a class="nav-link" href="/login">Login</a>
+            </li>
+
+            <!-- Register: Visible only to unauthenticated users -->
+            <li class="nav-item" sec:authorize="!isAuthenticated()">
+                <a class="nav-link" href="/register">Register</a>
+            </li>
+
+            <!-- Logout: Visible only to authenticated users -->
+            <li class="nav-item" sec:authorize="isAuthenticated()">
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="submit" class="nav-link btn btn-link" style="padding: 0; border: none; cursor: pointer;">
+                        Logout
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</nav>
+</body>
+</html>

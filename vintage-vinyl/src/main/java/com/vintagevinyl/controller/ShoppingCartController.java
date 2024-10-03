@@ -1,0 +1,134 @@
+package com.vintagevinyl.controller;
+
+import com.vintagevinyl.model.ShoppingCart;
+import com.vintagevinyl.model.User;
+import com.vintagevinyl.service.ShoppingCartService;
+import com.vintagevinyl.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
+import java.math.BigDecimal;
+
+@Controller
+@RequestMapping("/cart")
+public class ShoppingCartController {
+    private static final Logger logger = LoggerFactory.getLogger(ShoppingCartController.class);
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private ShoppingCartService shoppingCartService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Transactional
+    @GetMapping
+    public String viewCart(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+
+        User user = userService.findByUsername(userDetails.getUsername());
+        if (user == null) {
+            logger.error("User not found in database");
+            return "redirect:/login";
+        }
+
+        ShoppingCart cart = shoppingCartService.getCart(user);
+        cart.getItems().forEach(item -> {
+            item.getRecord().getTitle();
+        });
+
+        model.addAttribute("cart", cart);
+        return "cart";
+    }
+
+    @PostMapping("/add")
+    @ResponseBody
+    public ResponseEntity<?> addToCart(@AuthenticationPrincipal UserDetails userDetails,
+                                       @RequestParam Long recordId,
+                                       @RequestParam(defaultValue = "1") int quantity) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+        }
+
+        try {
+            User user = userService.findByUsername(userDetails.getUsername());
+            if (user == null) {
+                logger.error("User not found in database");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+
+            logger.info("Adding item to cart: userId={}, recordId={}, quantity={}", user.getId(), recordId, quantity);
+            shoppingCartService.addItemToCart(user, recordId, quantity);
+            logger.info("Item added to cart successfully");
+            return ResponseEntity.ok().body("Item added to cart successfully");
+        } catch (RecordNotFoundException e) {
+            logger.error("Record not found", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error adding item to cart", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to add record to cart: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/remove")
+    @ResponseBody
+    @Transactional
+    public ResponseEntity<String> removeFromCart(@AuthenticationPrincipal UserDetails userDetails,
+                                                 @RequestParam Long recordId) {
+        logger.debug("Removing item from cart for user: {}, recordId: {}", userDetails.getUsername(), recordId);
+        try {
+            User user = userService.findByUsername(userDetails.getUsername());
+            shoppingCartService.removeItemFromCart(user, recordId);
+            logger.debug("Item removed successfully");
+            return ResponseEntity.ok("Item removed from cart successfully");
+        } catch (Exception e) {
+            logger.error("Error removing item from cart", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to remove item from cart: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/clear")
+    @ResponseBody
+    public ResponseEntity<String> clearCart(@AuthenticationPrincipal UserDetails userDetails) {
+        logger.info("Attempting to clear cart for user: {}", userDetails.getUsername());
+        try {
+            User user = userService.findByUsername(userDetails.getUsername());
+            if (user == null) {
+                logger.error("User not found in database");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+            shoppingCartService.clearCart(user);
+            logger.info("Cart cleared successfully for user: {}", user.getUsername());
+            return ResponseEntity.ok("Cart cleared successfully");
+        } catch (Exception e) {
+            logger.error("Error clearing cart for user: " + userDetails.getUsername(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to clear cart: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/total")
+    @ResponseBody
+    public ResponseEntity<Double> getCartTotal(@AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.findByUsername(userDetails.getUsername());
+        BigDecimal total = shoppingCartService.calculateCartTotal(user);
+        return ResponseEntity.ok(total.doubleValue());
+    }
+}

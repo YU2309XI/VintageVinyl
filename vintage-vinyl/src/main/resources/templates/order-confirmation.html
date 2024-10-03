@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Order Confirmation - Vintage Vinyl')}">
+</head>
+<body>
+<nav th:replace="~{fragments :: navigation}"></nav>
+<div class="container mt-5">
+    <h1 class="mb-4">Order Confirmation</h1>
+    <div th:if="${order != null}">
+        <h2>Thank you for your order!</h2>
+        <p>Your order has been successfully placed and is being processed.</p>
+        <h3>Order Details</h3>
+        <table class="table">
+            <tr>
+                <th>Order ID:</th>
+                <td th:text="${order.id}"></td>
+            </tr>
+            <tr>
+                <th>Order Date:</th>
+                <td th:text="${#dates.format(order.orderDate, 'dd-MM-yyyy HH:mm')}"></td>
+            </tr>
+            <tr>
+                <th>Status:</th>
+                <td th:text="${order.status}"></td>
+            </tr>
+            <tr>
+                <th>Shipping Address:</th>
+                <td th:text="${order.shippingAddress}"></td>
+            </tr>
+            <tr>
+                <th>Payment Method:</th>
+                <td th:text="${order.paymentMethod}"></td>
+            </tr>
+        </table>
+
+        <h3>Order Items</h3>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Record</th>
+                <th>Artist</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${order.items}">
+                <td th:text="${item.record.title}"></td>
+                <td th:text="${item.record.artist}"></td>
+                <td th:text="${'$' + item.price}"></td>
+                <td th:text="${item.quantity}"></td>
+                <td th:text="${'$' + #numbers.formatDecimal(item.price * item.quantity, 1, 2)}"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="text-right">
+            <h4>Total: $<span th:text="${#numbers.formatDecimal(order.total, 1, 2)}"></span></h4>
+        </div>
+    </div>
+    <div th:if="${order == null}">
+        <p>Sorry, we couldn't find your order. Please contact customer support if you believe this is an error.</p>
+    </div>
+    <a href="/records" class="btn btn-primary mt-3">Continue Shopping</a>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

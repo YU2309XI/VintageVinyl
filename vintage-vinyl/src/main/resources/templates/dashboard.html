@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Dashboard - Vintage Vinyl')}"></head>
+<body>
+<nav th:replace="~{fragments :: navigation}"></nav>
+
+<div class="container mt-5">
+    <div sec:authorize="isAuthenticated()">
+        <h1 class="mb-4">Welcome to your Dashboard, <span th:text="${username}">User</span>!</h1>
+        <p>Your role(s): <span th:text="${#authentication.authorities}">No roles assigned</span></p>
+
+        <div class="row mt-4">
+            <!-- Non-admin functionalities -->
+            <div class="col-md-4" sec:authorize="!hasRole('ADMIN')">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">My Orders</h5>
+                        <p class="card-text">View and manage your orders.</p>
+                        <a href="/orders" class="btn btn-primary">View Orders</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4" sec:authorize="!hasRole('ADMIN')">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">My Account</h5>
+                        <p class="card-text">Update your account information.</p>
+                        <a href="/account" class="btn btn-primary">Manage Account</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4" sec:authorize="!hasRole('ADMIN')">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Wishlist</h5>
+                        <p class="card-text">View and manage your wishlist.</p>
+                        <a href="/wishlist" class="btn btn-primary">View Wishlist</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin functionalities -->
+            <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Admin Console</h5>
+                        <p class="card-text">Access admin-only features.</p>
+                        <a href="/admin" class="btn btn-danger">Go to Admin Console</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Manage Orders</h5>
+                <p class="card-text">View and manage all orders.</p>
+                <a href="/admin/orders" class="btn btn-danger">Manage Orders</a>
+            </div>
+        </div>
+    </div>
+
+
+    <div sec:authorize="!isAuthenticated()">
+        <h1 class="mb-4">Welcome to Vintage Vinyl</h1>
+        <p>Please log in to view your dashboard.</p>
+        <a href="/login" class="btn btn-primary">Login</a>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('My Wishlist - Vintage Vinyl')}"></head>
+<body>
+<nav th:replace="~{fragments :: navigation}"></nav>
+
+<div class="container mt-5">
+    <h1>My Wishlist</h1>
+
+    <div th:if="${wishlist == null || wishlist.items == null || wishlist.items.isEmpty()}">
+        <p>Your wishlist is empty. Start adding some albums!</p>
+    </div>
+
+    <div th:if="${wishlist != null && wishlist.items != null && !wishlist.items.isEmpty()}">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Album</th>
+                <th>Artist</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item, itemStat : ${wishlist.items}">
+                <td th:text="${item.title}">Album Title</td>
+                <td th:text="${item.artist}">Artist Name</td>
+                <td>
+                    <form th:action="@{/wishlist/remove}" method="post">
+                        <input type="hidden" name="itemIndex" th:value="${itemStat.index}" />
+                        <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <a href="/dashboard" class="btn btn-secondary mt-3">Back to Dashboard</a>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
