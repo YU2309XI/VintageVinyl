@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 
@@ -58,51 +59,48 @@ public class ShoppingCartController {
     }
 
     @PostMapping("/add")
-    @ResponseBody
-    public ResponseEntity<?> addToCart(@AuthenticationPrincipal UserDetails userDetails,
-                                       @RequestParam Long recordId,
-                                       @RequestParam(defaultValue = "1") int quantity) {
+    public String addToCart(@AuthenticationPrincipal UserDetails userDetails,
+                            @RequestParam("recordId") Long recordId,
+                            @RequestParam(defaultValue = "1") int quantity,
+                            RedirectAttributes redirectAttributes) {
+        logger.debug("Received add to cart request: recordId={}, quantity={}", recordId, quantity);
+
         if (userDetails == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            return "redirect:/login";
         }
 
         try {
             User user = userService.findByUsername(userDetails.getUsername());
             if (user == null) {
                 logger.error("User not found in database");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+                redirectAttributes.addFlashAttribute("error", "User not found");
+                return "redirect:/wishlist";
             }
 
             logger.info("Adding item to cart: userId={}, recordId={}, quantity={}", user.getId(), recordId, quantity);
             shoppingCartService.addItemToCart(user, recordId, quantity);
             logger.info("Item added to cart successfully");
-            return ResponseEntity.ok().body("Item added to cart successfully");
-        } catch (RecordNotFoundException e) {
-            logger.error("Record not found", e);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            redirectAttributes.addFlashAttribute("message", "Item added to cart successfully");
         } catch (Exception e) {
             logger.error("Error adding item to cart", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to add record to cart: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Failed to add record to cart: " + e.getMessage());
         }
+        return "redirect:/wishlist";
     }
 
     @PostMapping("/remove")
-    @ResponseBody
-    @Transactional
-    public ResponseEntity<String> removeFromCart(@AuthenticationPrincipal UserDetails userDetails,
-                                                 @RequestParam Long recordId) {
-        logger.debug("Removing item from cart for user: {}, recordId: {}", userDetails.getUsername(), recordId);
+    public String removeFromCart(@AuthenticationPrincipal UserDetails userDetails,
+                                 @RequestParam Long recordId,
+                                 RedirectAttributes redirectAttributes) {
         try {
             User user = userService.findByUsername(userDetails.getUsername());
             shoppingCartService.removeItemFromCart(user, recordId);
-            logger.debug("Item removed successfully");
-            return ResponseEntity.ok("Item removed from cart successfully");
+            redirectAttributes.addFlashAttribute("message", "Item removed from cart successfully.");
         } catch (Exception e) {
             logger.error("Error removing item from cart", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to remove item from cart: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Failed to remove item from cart: " + e.getMessage());
         }
+        return "redirect:/cart";
     }
 
     @PostMapping("/clear")

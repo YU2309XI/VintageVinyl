@@ -33,6 +33,7 @@ public class WishlistService {
         WishlistItem item = new WishlistItem();
         item.setTitle(record.getTitle());
         item.setArtist(record.getArtist());
+        item.setRecordId(record.getId());
         wishlist.getItems().add(item);
         wishlistRepository.save(wishlist);
     }

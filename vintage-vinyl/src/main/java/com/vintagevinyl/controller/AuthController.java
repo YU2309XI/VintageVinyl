@@ -74,7 +74,17 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public String showLoginForm() {
+    public String showLoginForm(@RequestParam(required = false) String error,
+                                @RequestParam(required = false) String logout,
+                                Model model) {
+        if (error != null) {
+            model.addAttribute("error", "Invalid username or password.");
+        }
+
+        if (logout != null) {
+            model.addAttribute("message", "You have been logged out successfully.");
+        }
+
         return "login";
     }
 
@@ -113,24 +123,53 @@ public class AuthController {
     }
 
     @PostMapping("/account")
-    public String updateAccount(@Valid @ModelAttribute("user") User user, BindingResult result, Model model, RedirectAttributes redirectAttributes) {
-        logger.info("Received update request for user: {}", user);
-        if (result.hasErrors()) {
-            logger.warn("Validation errors occurred while updating account for user: {}", user.getUsername());
-            result.getAllErrors().forEach(error -> logger.warn("Validation error: {}", error.getDefaultMessage()));
-            model.addAttribute("error", "Please correct the errors and try again.");
-            return "account";
-        }
+    public String updateAccount(@Valid @ModelAttribute("user") User user,
+                                BindingResult result,
+                                @RequestParam(required = false) String currentPassword,
+                                @RequestParam(required = false) String newPassword,
+                                @RequestParam(required = false) String confirmNewPassword,
+                                Model model,
+                                RedirectAttributes redirectAttributes,
+                                Authentication authentication) {
+        // 使用当前认证的用户名，而不是表单提交的用户名
+        String username = authentication.getName();
+        logger.info("Updating account for authenticated user: {}", username);
+
         try {
-            userService.updateUser(user);
-            redirectAttributes.addFlashAttribute("message", "Account updated successfully.");
-            logger.info("Account updated successfully for user: {}", user.getUsername());
+            User currentUser = userService.findByUsername(username);
+
+            // 只更新email
+            currentUser.setEmail(user.getEmail());
+            userService.updateUser(currentUser);
+
+            // 处理密码修改
+            if (currentPassword != null && !currentPassword.isEmpty()) {
+                if (newPassword == null || newPassword.isEmpty() || confirmNewPassword == null || confirmNewPassword.isEmpty()) {
+                    model.addAttribute("error", "New password and confirmation are required.");
+                    return "account";
+                }
+
+                if (!newPassword.equals(confirmNewPassword)) {
+                    model.addAttribute("error", "New passwords do not match.");
+                    return "account";
+                }
+
+                try {
+                    userService.changeUserPassword(currentUser, currentPassword, newPassword);
+                    redirectAttributes.addFlashAttribute("message", "Account and password updated successfully.");
+                } catch (IllegalArgumentException e) {
+                    model.addAttribute("error", "Failed to update password: " + e.getMessage());
+                    return "account";
+                }
+            } else {
+                redirectAttributes.addFlashAttribute("message", "Account updated successfully.");
+            }
+
+            return "redirect:/account";
         } catch (Exception e) {
-            logger.error("Error updating account for user: {}", user.getUsername(), e);
             model.addAttribute("error", "Failed to update account: " + e.getMessage());
             return "account";
         }
-        return "redirect:/account";
     }
 
     @Autowired
@@ -174,4 +213,5 @@ public class AuthController {
         redirectAttributes.addFlashAttribute("message", "Item removed from wishlist.");
         return "redirect:/wishlist";
     }
+
 }

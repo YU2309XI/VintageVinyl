@@ -59,7 +59,8 @@ public class UserService implements UserDetailsService, GenericService<User, Lon
     @Transactional
     public void updateUser(User user) {
         logger.info("Updating user in service: {}", user.getUsername());
-        User existingUser = findByUsername(user.getUsername());
+        User existingUser = userRepository.findByUsername(user.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + user.getUsername()));
         existingUser.setEmail(user.getEmail());
         userRepository.save(existingUser);
         logger.info("User updated successfully: {}", user.getUsername());
@@ -70,6 +71,15 @@ public class UserService implements UserDetailsService, GenericService<User, Lon
         User user = findByUsername(username);
         user.addRole("ROLE_ADMIN");
         return userRepository.save(user);
+    }
+
+    @Transactional
+    public void changeUserPassword(User user, String currentPassword, String newPassword) {
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 
     @Override

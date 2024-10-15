@@ -2,6 +2,8 @@ package com.vintagevinyl.controller;
 
 import com.vintagevinyl.model.Record;
 import com.vintagevinyl.service.RecordService;
+import com.vintagevinyl.service.UserService;
+import com.vintagevinyl.service.WishlistService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -10,6 +12,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.vintagevinyl.model.User;
 
 import jakarta.validation.Valid;
 
@@ -20,6 +26,11 @@ public class RecordController {
     @Autowired
     private RecordService recordService;
 
+    @Autowired
+    private WishlistService wishlistService;
+
+    @Autowired
+    private UserService userService;
     @GetMapping
     public String listRecords(@RequestParam(defaultValue = "1") int page,
                               @RequestParam(defaultValue = "") String search,
@@ -86,6 +97,21 @@ public class RecordController {
     public String deleteRecord(@PathVariable Long id) {
         recordService.deleteRecord(id);
         return "redirect:/records";
+    }
+
+    @PostMapping("/{id}/addToWishlist")
+    public String addToWishlist(@PathVariable Long id,
+                                @AuthenticationPrincipal UserDetails userDetails,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            User user = userService.findByUsername(userDetails.getUsername());
+            Record record = recordService.getRecordById(id);
+            wishlistService.addToWishlist(user, record);
+            redirectAttributes.addFlashAttribute("message", "Record added to wishlist successfully");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to add record to wishlist: " + e.getMessage());
+        }
+        return "redirect:/records/" + id;
     }
 
     @ExceptionHandler(RecordNotFoundException.class)

@@ -121,6 +121,7 @@ public class ShoppingCartService {
                 .sum();
     }
 
+
     @Transactional
     public void removeAllCartItemsForRecord(Long recordId) {
         List<ShoppingCart> carts = shoppingCartRepository.findAll();
