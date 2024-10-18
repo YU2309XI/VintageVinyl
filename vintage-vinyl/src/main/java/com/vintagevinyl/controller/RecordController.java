@@ -4,6 +4,7 @@ import com.vintagevinyl.model.Record;
 import com.vintagevinyl.service.RecordService;
 import com.vintagevinyl.service.UserService;
 import com.vintagevinyl.service.WishlistService;
+import com.vintagevinyl.service.CSVImportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,13 +16,19 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.multipart.MultipartFile;
 import com.vintagevinyl.model.User;
 
 import jakarta.validation.Valid;
+import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 @RequestMapping("/records")
 public class RecordController {
+
+    private static final Logger logger = LoggerFactory.getLogger(RecordController.class);
 
     @Autowired
     private RecordService recordService;
@@ -31,6 +38,10 @@ public class RecordController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private CSVImportService csvImportService;
+
     @GetMapping
     public String listRecords(@RequestParam(defaultValue = "1") int page,
                               @RequestParam(defaultValue = "") String search,
@@ -112,6 +123,31 @@ public class RecordController {
             redirectAttributes.addFlashAttribute("error", "Failed to add record to wishlist: " + e.getMessage());
         }
         return "redirect:/records/" + id;
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/import")
+    public String showImportForm() {
+        return "record-import";
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/import")
+    public String handleImport(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+        if (file.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Please select a file to upload.");
+            return "redirect:/records/import";
+        }
+
+        try {
+            int importedCount = csvImportService.importCSVData(file.getInputStream());
+            redirectAttributes.addFlashAttribute("message", "Successfully imported " + importedCount + " records.");
+        } catch (IOException e) {
+            logger.error("Failed to import CSV file", e);
+            redirectAttributes.addFlashAttribute("error", "Failed to import file: " + e.getMessage());
+        }
+
+        return "redirect:/records/import";
     }
 
     @ExceptionHandler(RecordNotFoundException.class)

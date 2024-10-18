@@ -92,4 +92,23 @@ public class OrderService {
         order.setStatus(status);
         orderRepository.save(order);
     }
+
+    @Transactional
+    public void cancelOrder(Long orderId, User user) {
+        Order order = getOrderByIdAndUser(orderId, user);
+        if ("PENDING".equals(order.getStatus())) {
+            order.setStatus("CANCELLED");
+            orderRepository.save(order);
+        } else {
+            throw new IllegalStateException("Order cannot be cancelled as it is not in PENDING status");
+        }
+    }
+
+    @Transactional
+    public void deleteOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
+        orderRepository.delete(order);
+    }
+
 }

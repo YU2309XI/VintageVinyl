@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Import Records - Vintage Vinyl')}">
+</head>
+<body>
+<nav th:replace="~{fragments :: navigation}"></nav>
+
+<div class="container mt-5">
+    <h1 class="mb-4">Import Records</h1>
+
+    <div th:if="${message}" class="alert alert-success" role="alert" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+    <form th:action="@{/records/import}" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="csvFile">Select CSV File</label>
+            <input type="file" class="form-control-file" id="csvFile" name="file" accept=".csv" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Import CSV</button>
+    </form>
+
+    <a href="/records" class="btn btn-secondary mt-3">Back to Records</a>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

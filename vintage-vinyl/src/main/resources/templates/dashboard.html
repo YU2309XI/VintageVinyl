@@ -1,18 +1,41 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments :: head('Dashboard - Vintage Vinyl')}"></head>
+<head th:replace="~{fragments :: head('Dashboard - Vintage Vinyl')}">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container {
+            max-width: 1200px;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .row {
+            justify-content: center;
+        }
+        .admin-section {
+            margin-top: 40px;
+        }
+        h1, p {
+            text-align: center;
+        }
+        .btn-primary, .btn-danger {
+            width: 100%;
+        }
+    </style>
+</head>
 <body>
 <nav th:replace="~{fragments :: navigation}"></nav>
 
 <div class="container mt-5">
+    <!-- User-specific content -->
     <div sec:authorize="isAuthenticated()">
         <h1 class="mb-4">Welcome to your Dashboard, <span th:text="${username}">User</span>!</h1>
         <p>Your role(s): <span th:text="${#authentication.authorities}">No roles assigned</span></p>
 
-        <div class="row mt-4">
+        <div class="row">
             <!-- Non-admin functionalities -->
             <div class="col-md-4" sec:authorize="!hasRole('ADMIN')">
-                <div class="card">
+                <div class="card shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title">My Orders</h5>
                         <p class="card-text">View and manage your orders.</p>
@@ -22,7 +45,7 @@
             </div>
 
             <div class="col-md-4" sec:authorize="!hasRole('ADMIN')">
-                <div class="card">
+                <div class="card shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title">My Account</h5>
                         <p class="card-text">Update your account information.</p>
@@ -32,7 +55,7 @@
             </div>
 
             <div class="col-md-4" sec:authorize="!hasRole('ADMIN')">
-                <div class="card">
+                <div class="card shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title">Wishlist</h5>
                         <p class="card-text">View and manage your wishlist.</p>
@@ -40,10 +63,12 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Admin functionalities -->
+        <!-- Admin functionalities -->
+        <div class="admin-section row">
             <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
-                <div class="card">
+                <div class="card shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title">Admin Console</h5>
                         <p class="card-text">Access admin-only features.</p>
@@ -51,24 +76,26 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Manage Orders</h5>
-                <p class="card-text">View and manage all orders.</p>
-                <a href="/admin/orders" class="btn btn-danger">Manage Orders</a>
+            <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Manage Orders</h5>
+                        <p class="card-text">View and manage all orders.</p>
+                        <a href="/admin/orders" class="btn btn-danger">Manage Orders</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-
+    <!-- Guest users -->
     <div sec:authorize="!isAuthenticated()">
         <h1 class="mb-4">Welcome to Vintage Vinyl</h1>
         <p>Please log in to view your dashboard.</p>
-        <a href="/login" class="btn btn-primary">Login</a>
+        <div class="text-center">
+            <a href="/login" class="btn btn-primary">Login</a>
+        </div>
     </div>
 </div>
 

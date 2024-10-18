@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,8 +30,14 @@ public class Record {
     @Column(nullable = false) // Ensures the 'artist' column cannot be null in the database
     private String artist;
 
-    @Column(name = "release_year") // Maps 'releaseYear' to 'release_year' in the database
-    private Integer releaseYear;
+    @Column(name = "album")
+    private String album;
+
+    @Column(name = "release_date")
+    private LocalDate releaseDate;
+
+    @Column(name = "cover_image_url")
+    private String coverImageUrl;
 
     private String genre;
 

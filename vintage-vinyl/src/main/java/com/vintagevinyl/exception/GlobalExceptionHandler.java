@@ -12,7 +12,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public String handleException(Exception e, Model model) {
         model.addAttribute("error", e.getMessage());
-        return "error"; // Returns a generic error view for displaying the error message
+        return "error";
     }
 
     @ExceptionHandler(AccessDeniedException.class)

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -89,7 +90,20 @@ public class OrderController {
     public String viewAllOrders(Model model) {
         List<Order> allOrders = orderService.getAllOrders();
         model.addAttribute("orders", allOrders);
-        return "order-details";  // 使用相同的模板
+        return "admin-orders";
+    }
+
+
+    @GetMapping("/admin/orders/{orderId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String viewAdminOrderDetails(@PathVariable("orderId") Long orderId, Model model) {
+        try {
+            Order order = orderService.getOrderById(orderId);
+            model.addAttribute("order", order);
+            return "order-details";
+        } catch (OrderNotFoundException e) {
+            return "redirect:/error";
+        }
     }
 
     @PostMapping("/admin/orders/{orderId}/update-status")
@@ -97,7 +111,34 @@ public class OrderController {
     public String updateOrderStatus(@PathVariable("orderId") Long orderId,
                                     @RequestParam("status") String status) {
         orderService.updateOrderStatus(orderId, status);
-        return "redirect:/orders/" + orderId;
+        return "redirect:/admin/orders/" + orderId;
+    }
+
+    @PostMapping("/orders/{orderId}/cancel")
+    public String cancelOrder(@PathVariable("orderId") Long orderId,
+                              @AuthenticationPrincipal UserDetails userDetails,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            User user = userService.findByUsername(userDetails.getUsername());
+            orderService.cancelOrder(orderId, user);
+            redirectAttributes.addFlashAttribute("message", "Order cancelled successfully.");
+        } catch (OrderNotFoundException | IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/orders";
+    }
+
+
+    @PostMapping("/admin/orders/{orderId}/delete")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String deleteOrder(@PathVariable("orderId") Long orderId, RedirectAttributes redirectAttributes) {
+        try {
+            orderService.deleteOrder(orderId);
+            redirectAttributes.addFlashAttribute("message", "Order deleted successfully.");
+        } catch (OrderNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", "Order not found.");
+        }
+        return "redirect:/admin/orders";
     }
 
 }

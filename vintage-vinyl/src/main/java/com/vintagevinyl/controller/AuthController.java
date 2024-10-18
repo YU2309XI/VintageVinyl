@@ -99,7 +99,6 @@ public class AuthController {
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.toList()));
 
-            // 获取用户的最近订单
             List<Order> recentOrders = orderService.getRecentOrdersForUser(user, 5);
             model.addAttribute("recentOrders", recentOrders);
         }
@@ -131,18 +130,15 @@ public class AuthController {
                                 Model model,
                                 RedirectAttributes redirectAttributes,
                                 Authentication authentication) {
-        // 使用当前认证的用户名，而不是表单提交的用户名
         String username = authentication.getName();
         logger.info("Updating account for authenticated user: {}", username);
 
         try {
             User currentUser = userService.findByUsername(username);
 
-            // 只更新email
             currentUser.setEmail(user.getEmail());
             userService.updateUser(currentUser);
 
-            // 处理密码修改
             if (currentPassword != null && !currentPassword.isEmpty()) {
                 if (newPassword == null || newPassword.isEmpty() || confirmNewPassword == null || confirmNewPassword.isEmpty()) {
                     model.addAttribute("error", "New password and confirmation are required.");

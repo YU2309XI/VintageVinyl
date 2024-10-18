@@ -11,6 +11,7 @@
 <div class="container mt-5">
     <h1 class="mb-4">Order Details</h1>
 
+    <!-- Order details -->
     <div th:if="${order != null}">
         <div class="card mb-4">
             <div class="card-header">
@@ -24,6 +25,7 @@
             </div>
         </div>
 
+        <!-- Order items -->
         <h3>Order Items</h3>
         <table class="table table-hover">
             <thead class="thead-light">
@@ -50,7 +52,13 @@
             <h4>Total: <span th:text="${'$' + #numbers.formatDecimal(order.total, 1, 2)}"></span></h4>
         </div>
 
-        <!-- 管理员特定功能 -->
+        <!-- Show "Cancel Order" button only if the status is PENDING -->
+        <form th:if="${order.status == 'PENDING'}" th:action="@{'/orders/' + ${order.id} + '/cancel'}" method="post" style="display:inline;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <button type="submit" class="btn btn-warning mt-4">Cancel Order</button>
+        </form>
+
+        <!-- Admin specific actions -->
         <div sec:authorize="hasRole('ADMIN')" class="mt-4">
             <h3>Admin Actions</h3>
             <form th:action="@{/admin/orders/{id}/update-status(id=${order.id})}" method="post" class="form-inline">
@@ -69,6 +77,7 @@
         </div>
     </div>
 
+    <!-- Display message if no order is found -->
     <div th:if="${order == null}">
         <div class="alert alert-warning" role="alert">
             Order not found.
@@ -76,7 +85,6 @@
     </div>
 
     <a href="/orders" class="btn btn-secondary mt-3">Back to Orders</a>
-    <a href="/admin/orders" class="btn btn-secondary mt-3" sec:authorize="hasRole('ADMIN')">Back to All Orders</a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

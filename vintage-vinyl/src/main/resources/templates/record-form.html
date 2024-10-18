@@ -24,9 +24,11 @@
         </div>
 
         <div class="form-group">
-            <label for="releaseYear">Release Year:</label>
-            <input type="number" class="form-control" id="releaseYear" th:field="*{releaseYear}" required>
-            <span th:if="${#fields.hasErrors('releaseYear')}" th:errors="*{releaseYear}" class="text-danger"></span>
+            <label for="releaseDate">Release Year:</label>
+            <input type="number" class="form-control" id="releaseDate"
+                   th:value="${#dates.format(record.releaseDate, 'yyyy')}"
+                   th:field="*{releaseDate}" required>
+            <span th:if="${#fields.hasErrors('releaseDate')}" th:errors="*{releaseDate}" class="text-danger"></span>
         </div>
 
         <div class="form-group">
