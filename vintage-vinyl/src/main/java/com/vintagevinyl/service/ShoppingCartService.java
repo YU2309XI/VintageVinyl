@@ -31,7 +31,13 @@ public class ShoppingCartService {
 
     @Transactional
     public void addItemToCart(User user, Long recordId, int quantity) {
-        logger.debug("Adding item to cart. User: {}, RecordId: {}, Quantity: {}", user.getId(), recordId, quantity);
+        if (quantity < 1) {
+            throw new IllegalArgumentException("Quantity must be at least 1");
+        }
+        if (quantity > CartItem.MAX_QUANTITY) {
+            throw new IllegalArgumentException("Quantity cannot exceed " + CartItem.MAX_QUANTITY);
+        }
+
         try {
             ShoppingCart cart = getOrCreateCart(user);
             Record record = recordRepository.findById(recordId)
@@ -42,25 +48,19 @@ public class ShoppingCartService {
                     .findFirst();
 
             if (existingItem.isPresent()) {
-                existingItem.get().setQuantity(existingItem.get().getQuantity() + quantity);
-                logger.debug("Updated existing item quantity");
+                existingItem.get().setQuantity(quantity);
             } else {
                 CartItem newItem = new CartItem();
                 newItem.setRecord(record);
                 newItem.setQuantity(quantity);
                 newItem.setCart(cart);
                 cart.addItem(newItem);
-                logger.debug("Added new item to cart");
             }
 
             shoppingCartRepository.save(cart);
-            logger.debug("Cart saved successfully");
-        } catch (RecordNotFoundException e) {
-            logger.error("Failed to add item to cart: {}", e.getMessage());
-            throw e;
         } catch (Exception e) {
-            logger.error("Unexpected error while adding item to cart", e);
-            throw new RuntimeException("Failed to add item to cart", e);
+            logger.error("Failed to add item to cart", e);
+            throw e;
         }
     }
 
@@ -107,11 +107,54 @@ public class ShoppingCartService {
     @Transactional(readOnly = true)
     public BigDecimal calculateCartTotal(User user) {
         ShoppingCart cart = getCart(user);
+        if (cart == null || cart.getItems() == null) {
+            return BigDecimal.ZERO;
+        }
+
         return cart.getItems().stream()
-                .map(item -> item.getRecord().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .map(item -> {
+                    BigDecimal itemPrice = item.getRecord().getPrice();
+                    int itemQuantity = item.getQuantity();
+                    return itemPrice.multiply(new BigDecimal(itemQuantity));
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    @Transactional
+    public void updateCartItemQuantity(User user, Long recordId, int quantity) {
+        if (quantity < 1) {
+            throw new IllegalArgumentException("Quantity must be at least 1");
+        }
+        if (quantity > CartItem.MAX_QUANTITY) {
+            throw new IllegalArgumentException("Quantity cannot exceed " + CartItem.MAX_QUANTITY);
+        }
+
+        ShoppingCart cart = getOrCreateCart(user);
+        Optional<CartItem> item = cart.getItems().stream()
+                .filter(i -> i.getRecord().getId().equals(recordId))
+                .findFirst();
+
+        if (item.isPresent()) {
+            item.get().setQuantity(quantity);
+            shoppingCartRepository.save(cart);
+        } else {
+            throw new RuntimeException("Item not found in cart");
+        }
+    }
+
+    @Transactional
+    public void validateCartItems(User user) {
+        ShoppingCart cart = getCart(user);
+        boolean hasChanges = cart.getItems().removeIf(item ->
+                item.getRecord() == null ||
+                        item.getQuantity() == null ||
+                        item.getQuantity() < 1
+        );
+
+        if (hasChanges) {
+            shoppingCartRepository.save(cart);
+        }
+    }
 
     @Transactional
     public int getCartItemCount(User user) {

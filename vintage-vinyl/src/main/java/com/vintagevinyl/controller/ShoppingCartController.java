@@ -129,4 +129,45 @@ public class ShoppingCartController {
         BigDecimal total = shoppingCartService.calculateCartTotal(user);
         return ResponseEntity.ok(total.doubleValue());
     }
+
+    @PostMapping("/update-quantity")
+    @ResponseBody
+    public ResponseEntity<String> updateQuantity(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam("recordId") Long recordId,
+            @RequestParam("quantity") int quantity) {
+
+        try {
+            if (userDetails == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            }
+
+            User user = userService.findByUsername(userDetails.getUsername());
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+
+            if (quantity < 1) {
+                return ResponseEntity.badRequest().body("Quantity must be at least 1");
+            }
+
+            shoppingCartService.updateCartItemQuantity(user, recordId, quantity);
+            return ResponseEntity.ok("Quantity updated successfully");
+        } catch (Exception e) {
+            logger.error("Error updating quantity", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to update quantity: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/count")
+    @ResponseBody
+    public ResponseEntity<Integer> getCartItemCount(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.ok(0);
+        }
+        User user = userService.findByUsername(userDetails.getUsername());
+        int count = shoppingCartService.getCartItemCount(user);
+        return ResponseEntity.ok(count);
+    }
 }
