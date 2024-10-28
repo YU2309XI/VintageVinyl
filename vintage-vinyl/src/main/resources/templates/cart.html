@@ -1,72 +1,384 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments :: head('Your Shopping Cart - Vintage Vinyl')}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Old+Standard+TT:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <nav th:replace="~{fragments :: navigation}"></nav>
+
 <div class="container mt-5">
-    <h1 class="mb-4">Your Shopping Cart</h1>
-
-    <div th:if="${#lists.isEmpty(cart.items)}">
-        <p>Your cart is empty.</p>
-    </div>
-
-    <div th:if="${not #lists.isEmpty(cart.items)}">
-        <table class="table">
-            <thead>
-            <tr>
-                <th>Record</th>
-                <th>Artist</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Subtotal</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="item : ${cart.items}" class="cart-item-row">
-                <td th:text="${item.record.title}"></td>
-                <td th:text="${item.record.artist}"></td>
-                <td class="price"
-                    th:text="${'$' + #numbers.formatDecimal(item.record.price, 1, 2)}"
-                    th:data-price="${item.record.price}">
-                </td>
-                <td>
-                    <input type="number"
-                           class="form-control quantity-input"
-                           th:value="${item.quantity}"
-                           min="1"
-                           th:data-record-id="${item.record.id}">
-                </td>
-                <td class="subtotal"
-                    th:text="${'$' + #numbers.formatDecimal(item.record.price * item.quantity, 1, 2)}">
-                </td>
-                <td>
-                    <form th:action="@{/cart/remove}" method="post" style="display: inline;">
-                        <input type="hidden" name="recordId" th:value="${item.record.id}" />
-                        <button type="submit" class="btn btn-danger remove-item">Remove</button>
-                    </form>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-
-        <div class="text-right mt-3">
-            <h4>Total: $<span id="cart-total" th:text="${#numbers.formatDecimal(cart.total, 1, 2)}">0.00</span></h4>
+    <div class="cart-box">
+        <div class="vintage-header">
+            <h1 class="vintage-title">Your Shopping Cart</h1>
+            <div class="vinyl-decoration">
+                <div class="vinyl-line"></div>
+                <div class="vinyl-icon">♫</div>
+                <div class="vinyl-line"></div>
+            </div>
         </div>
 
-        <div class="mt-3">
-            <button id="clear-cart" class="btn btn-warning">Clear Cart</button>
-            <a href="/checkout" class="btn btn-success">Proceed to Checkout</a>
+        <div th:if="${#lists.isEmpty(cart.items)}" class="empty-cart">
+            <div class="cart-icon">🛒</div>
+            <p class="empty-text">Your cart is empty.</p>
+            <p class="empty-subtext">Start adding some records to your collection!</p>
+            <a href="/records" class="btn btn-vintage">Browse Records</a>
+        </div>
+
+        <div th:if="${not #lists.isEmpty(cart.items)}" class="cart-content">
+            <div class="table-container">
+                <table class="table vintage-table">
+                    <thead>
+                    <tr>
+                        <th>Record</th>
+                        <th>Artist</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Subtotal</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${cart.items}" class="cart-item-row">
+                        <td class="record-title" th:text="${item.record.title}"></td>
+                        <td class="artist-name" th:text="${item.record.artist}"></td>
+                        <td class="price"
+                            th:text="${'$' + #numbers.formatDecimal(item.record.price, 1, 2)}"
+                            th:data-price="${item.record.price}">
+                        </td>
+                        <td class="quantity-cell">
+                            <input type="number"
+                                   class="form-control quantity-input vintage-input"
+                                   th:value="${item.quantity}"
+                                   min="1"
+                                   th:data-record-id="${item.record.id}">
+                        </td>
+                        <td class="subtotal"
+                            th:text="${'$' + #numbers.formatDecimal(item.record.price * item.quantity, 1, 2)}">
+                        </td>
+                        <td class="action-cell">
+                            <form th:action="@{/cart/remove}" method="post">
+                                <input type="hidden" name="recordId" th:value="${item.record.id}" />
+                                <button type="submit" class="btn btn-vintage-danger remove-item">
+                                    <i class="fas fa-times"></i> Remove
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="cart-summary">
+                <div class="total-section">
+                    <h4 class="total-label">Total:</h4>
+                    <div class="total-amount">
+                        $<span id="cart-total" th:text="${#numbers.formatDecimal(cart.total, 1, 2)}">0.00</span>
+                    </div>
+                </div>
+
+                <div class="cart-actions">
+                    <button id="clear-cart" class="btn btn-vintage-secondary">
+                        <i class="fas fa-trash"></i> Clear Cart
+                    </button>
+                    <a href="/records" class="btn btn-vintage-alt">
+                        <i class="fas fa-record-vinyl"></i> Continue Shopping
+                    </a>
+                    <a href="/checkout" class="btn btn-vintage">
+                        <i class="fas fa-shopping-cart"></i> Proceed to Checkout
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-
-    <a href="/records" class="btn btn-primary mt-3">Continue Shopping</a>
 </div>
+
+<style>
+    :root {
+        --vintage-primary: #2c1810;
+        --vintage-secondary: #d4af37;
+        --vintage-background: #f5e6d3;
+        --vintage-card: #fff9f0;
+        --vintage-text: #2c1810;
+        --vintage-accent: #8b4513;
+        --vintage-border: #d4af37;
+        --vintage-success: #3e5c3b;
+        --vintage-warning: #8b6e34;
+        --vintage-danger: #a64242;
+    }
+
+    body {
+        font-family: 'Old Standard TT', serif !important;
+        background-color: var(--vintage-background) !important;
+        color: var(--vintage-text) !important;
+        background-image:
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"),
+                repeating-linear-gradient(45deg, #f5e6d3 0px, #f5e6d3 2px, #f0dcc3 2px, #f0dcc3 4px) !important;
+    }
+
+    .cart-box {
+        background: var(--vintage-card) !important;
+        padding: 3rem !important;
+        border: 2px solid var(--vintage-border) !important;
+        position: relative !important;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+        margin-bottom: 2rem !important;
+    }
+
+    .cart-box::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        border: 1px solid var(--vintage-border);
+        pointer-events: none;
+    }
+
+    .vintage-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--vintage-border);
+    }
+
+    .vinyl-decoration {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 1rem 0;
+    }
+
+    .vinyl-line {
+        height: 2px;
+        width: 80px;
+        background: var(--vintage-border);
+        margin: 0 10px;
+    }
+
+    .vinyl-icon {
+        font-size: 24px;
+        color: var(--vintage-border);
+    }
+
+    .vintage-title {
+        font-family: 'Playfair Display', serif !important;
+        color: var(--vintage-primary) !important;
+        font-size: 2.8rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 3px !important;
+        text-shadow: 2px 2px 0px rgba(212, 175, 55, 0.2) !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .empty-cart {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .cart-icon {
+        font-size: 3rem;
+        color: var(--vintage-border);
+        margin-bottom: 1rem;
+    }
+
+    .empty-text {
+        font-size: 1.5rem;
+        color: var(--vintage-text);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-subtext {
+        color: var(--vintage-accent);
+        font-style: italic;
+        margin-bottom: 2rem;
+    }
+
+    .table-container {
+        background: rgba(212, 175, 55, 0.05);
+        padding: 1.5rem;
+        border: 1px solid var(--vintage-border);
+        margin-bottom: 2rem;
+    }
+
+    .vintage-table {
+        margin: 0;
+        border: none;
+    }
+
+    .vintage-table thead {
+        background: var(--vintage-primary);
+        color: var(--vintage-card);
+    }
+
+    .vintage-table thead th {
+        font-family: 'Playfair Display', serif;
+        padding: 1rem;
+        border: none;
+    }
+
+    .vintage-table tbody tr {
+        border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    }
+
+    .vintage-table tbody tr:hover {
+        background: rgba(212, 175, 55, 0.1);
+    }
+
+    .record-title {
+        color: var(--vintage-primary);
+        font-weight: bold;
+    }
+
+    .artist-name {
+        color: var(--vintage-accent);
+        font-style: italic;
+    }
+
+    .price, .subtotal {
+        font-family: 'Playfair Display', serif;
+        color: var(--vintage-primary);
+    }
+
+    .quantity-cell {
+        width: 120px;
+    }
+
+    .vintage-input {
+        background-color: var(--vintage-card) !important;
+        border: 1px solid var(--vintage-border) !important;
+        padding: 0.5rem !important;
+        font-family: 'Old Standard TT', serif !important;
+        transition: all 0.3s ease !important;
+        text-align: center !important;
+    }
+
+    .vintage-input:focus {
+        border-color: var(--vintage-primary) !important;
+        box-shadow: 0 0 0 0.2rem rgba(139, 94, 52, 0.25) !important;
+    }
+
+    .cart-summary {
+        border-top: 2px solid var(--vintage-border);
+        padding-top: 2rem;
+        margin-top: 2rem;
+    }
+
+    .total-section {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .total-label {
+        font-family: 'Playfair Display', serif;
+        color: var(--vintage-primary);
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .total-amount {
+        font-family: 'Playfair Display', serif;
+        color: var(--vintage-primary);
+        font-size: 2rem;
+        font-weight: bold;
+    }
+
+    .cart-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    .btn-vintage,
+    .btn-vintage-secondary,
+    .btn-vintage-danger,
+    .btn-vintage-alt {
+        font-family: 'Old Standard TT', serif !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+        padding: 0.75rem 1.5rem !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .btn-vintage {
+        background-color: var(--vintage-primary) !important;
+        border-color: var(--vintage-border) !important;
+        color: var(--vintage-card) !important;
+        box-shadow: 2px 2px 0 var(--vintage-border) !important;
+    }
+
+    .btn-vintage-secondary {
+        background-color: var(--vintage-card) !important;
+        border: 1px solid var(--vintage-border) !important;
+        color: var(--vintage-primary) !important;
+    }
+
+    .btn-vintage-danger {
+        background-color: transparent !important;
+        border: 1px solid var(--vintage-danger) !important;
+        color: var(--vintage-danger) !important;
+    }
+
+    .btn-vintage-alt {
+        background-color: var(--vintage-accent) !important;
+        border-color: var(--vintage-border) !important;
+        color: var(--vintage-card) !important;
+    }
+
+    .btn-vintage:hover {
+        background-color: var(--vintage-accent) !important;
+        transform: translate(2px, 2px) !important;
+        box-shadow: none !important;
+    }
+
+    .btn-vintage-danger:hover {
+        background-color: var(--vintage-danger) !important;
+        color: var(--vintage-card) !important;
+    }
+
+    @media (max-width: 768px) {
+        .cart-box {
+            padding: 1.5rem !important;
+            margin: 1rem !important;
+        }
+
+        .vintage-title {
+            font-size: 2rem !important;
+        }
+
+        .vinyl-line {
+            width: 40px !important;
+        }
+
+        .cart-actions {
+            flex-direction: column;
+        }
+
+        .cart-actions .btn {
+            width: 100% !important;
+        }
+
+        .vintage-table {
+            display: block;
+            overflow-x: auto;
+        }
+
+        .quantity-cell {
+            min-width: 100px;
+        }
+    }
+</style>
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="/cart.js"></script>
+
 </body>
 </html>

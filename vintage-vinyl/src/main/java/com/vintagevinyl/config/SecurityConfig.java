@@ -22,16 +22,30 @@ public class SecurityConfig {
 
         http
                 .authorizeHttpRequests(auth -> auth
+                        // Public access endpoints
                         .requestMatchers("/", "/register", "/login", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/records").permitAll()
+
+                        // Inventory management endpoints - Admin only
+                        .requestMatchers("/inventory",
+                                "/inventory/**",
+                                "/api/inventory/**",
+                                "/api/records/*/stock",
+                                "/api/records/*/threshold",
+                                "/api/records/stock/batch",
+                                "/api/records/low-stock").hasRole("ADMIN")
+
+                        // Existing admin endpoints
+                        .requestMatchers("/records/new", "/records/*/edit", "/records/*/delete").hasRole("ADMIN")
+                        .requestMatchers("/admin/**", "/admin/orders/**").hasRole("ADMIN")
+
+                        // Endpoints requiring authentication
                         .requestMatchers("/account").authenticated()
                         .requestMatchers("/wishlist/add").authenticated()
                         .requestMatchers("/orders/**").authenticated()
                         .requestMatchers("/checkout", "/order-confirmation/**").authenticated()
-                        .requestMatchers("/records").permitAll()
-                        .requestMatchers("/records/new", "/records/*/edit", "/records/*/delete").hasRole("ADMIN")
                         .requestMatchers("/cart/**").authenticated()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/admin/**", "/admin/orders/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")
@@ -46,7 +60,13 @@ public class SecurityConfig {
                         .tokenValiditySeconds(86400))
                 .csrf(csrf -> csrf
                         .csrfTokenRequestHandler(requestHandler)
-                        .ignoringRequestMatchers("/cart/**", "/checkout"));
+                        // CSRF exclusion list
+                        .ignoringRequestMatchers("/cart/**",
+                                "/checkout",
+                                "/api/records/*/stock",
+                                "/api/records/*/threshold",
+                                "/api/records/stock/batch"));
+
         return http.build();
     }
 

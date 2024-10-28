@@ -1,54 +1,349 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments :: head('My Wishlist - Vintage Vinyl')}"></head>
+<head th:replace="~{fragments :: head('My Wishlist - Vintage Vinyl')}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Old+Standard+TT:wght@400;700&display=swap" rel="stylesheet">
+</head>
 <body>
 <nav th:replace="~{fragments :: navigation}"></nav>
 
 <div class="container mt-5">
-    <h1>My Wishlist</h1>
+    <div class="wishlist-box">
+        <div class="vintage-header">
+            <h1 class="vintage-title">My Wishlist</h1>
+            <div class="vinyl-decoration">
+                <div class="vinyl-line"></div>
+                <div class="vinyl-icon">♫</div>
+                <div class="vinyl-line"></div>
+            </div>
+        </div>
 
-    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${message}" class="alert alert-success vintage-alert" th:text="${message}"></div>
+        <div th:if="${error}" class="alert alert-danger vintage-alert" th:text="${error}"></div>
 
-    <div th:if="${wishlist == null || wishlist.items == null || wishlist.items.isEmpty()}">
-        <p>Your wishlist is empty. Start adding some albums!</p>
+        <div th:if="${wishlist == null || wishlist.items == null || wishlist.items.isEmpty()}" class="empty-wishlist">
+            <div class="empty-icon">♡</div>
+            <p class="empty-text">Your wishlist is empty.</p>
+            <p class="empty-subtext">Start exploring our collection and add some albums!</p>
+            <a href="/records" class="btn btn-vintage">Browse Records</a>
+        </div>
+
+        <div th:if="${wishlist != null && wishlist.items != null && !wishlist.items.isEmpty()}" class="wishlist-content">
+            <div class="vintage-table-container">
+                <table class="table vintage-table">
+                    <thead>
+                    <tr>
+                        <th>Album</th>
+                        <th>Artist</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item, itemStat : ${wishlist.items}">
+                        <td>
+                            <span class="album-title" th:text="${item.title}">Album Title</span>
+                        </td>
+                        <td>
+                            <span class="artist-name" th:text="${item.artist}">Artist Name</span>
+                        </td>
+                        <td class="actions-cell">
+                            <div class="action-buttons">
+                                <form th:action="@{/cart/add}" method="post">
+                                    <input type="hidden" name="recordId" th:value="${item.recordId}" />
+                                    <input type="hidden" name="quantity" value="1" />
+                                    <button type="submit" class="btn btn-vintage-action">
+                                        <i class="fas fa-shopping-cart"></i> Add to Cart
+                                    </button>
+                                </form>
+                                <form th:action="@{/wishlist/remove}" method="post">
+                                    <input type="hidden" name="itemIndex" th:value="${itemStat.index}" />
+                                    <button type="submit" class="btn btn-vintage-danger">
+                                        <i class="fas fa-times"></i> Remove
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="wishlist-footer">
+                <a href="/records" class="btn btn-vintage">Continue Shopping</a>
+                <a href="/dashboard" class="btn btn-vintage-secondary">Back to Dashboard</a>
+            </div>
+        </div>
     </div>
-
-    <div th:if="${wishlist != null && wishlist.items != null && !wishlist.items.isEmpty()}">
-        <table class="table">
-            <thead>
-            <tr>
-                <th>Album</th>
-                <th>Artist</th>
-                <th>Action</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="item, itemStat : ${wishlist.items}">
-                <td th:text="${item.title}">Album Title</td>
-                <td th:text="${item.artist}">Artist Name</td>
-                <td>
-                    <form th:action="@{/wishlist/remove}" method="post" style="display: inline;">
-                        <input type="hidden" name="itemIndex" th:value="${itemStat.index}" />
-                        <button type="submit" class="btn btn-sm btn-danger">Remove</button>
-                    </form>
-                    <!-- Add to Cart button -->
-                    <form th:action="@{/cart/add}" method="post" style="display: inline;">
-                        <input type="hidden" name="recordId" th:value="${item.recordId}" />
-                        <input type="hidden" name="quantity" value="1" />
-                        <button type="submit" class="btn btn-sm btn-primary">Add to Cart</button>
-                    </form>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <a href="/dashboard" class="btn btn-secondary mt-3">Back to Dashboard</a>
 </div>
+
+<style>
+    :root {
+        --vintage-primary: #2c1810;
+        --vintage-secondary: #d4af37;
+        --vintage-background: #f5e6d3;
+        --vintage-card: #fff9f0;
+        --vintage-text: #2c1810;
+        --vintage-accent: #8b4513;
+        --vintage-border: #d4af37;
+        --vintage-success: #3e5c3b;
+        --vintage-danger: #a64242;
+    }
+
+    body {
+        font-family: 'Old Standard TT', serif !important;
+        background-color: var(--vintage-background) !important;
+        color: var(--vintage-text) !important;
+        background-image:
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"),
+                repeating-linear-gradient(45deg, #f5e6d3 0px, #f5e6d3 2px, #f0dcc3 2px, #f0dcc3 4px) !important;
+    }
+
+    .wishlist-box {
+        background: var(--vintage-card) !important;
+        padding: 3rem !important;
+        border: 2px solid var(--vintage-border) !important;
+        position: relative !important;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+        margin-bottom: 2rem !important;
+    }
+
+    .wishlist-box::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        border: 1px solid var(--vintage-border);
+        pointer-events: none;
+    }
+
+    .vintage-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--vintage-border);
+    }
+
+    .vinyl-decoration {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    .vinyl-line {
+        height: 2px;
+        width: 80px;
+        background: var(--vintage-border);
+        margin: 0 10px;
+    }
+
+    .vinyl-icon {
+        font-size: 24px;
+        color: var(--vintage-border);
+    }
+
+    .vintage-title {
+        font-family: 'Playfair Display', serif !important;
+        color: var(--vintage-primary) !important;
+        font-size: 2.8rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 3px !important;
+        text-shadow: 2px 2px 0px rgba(212, 175, 55, 0.2) !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .vintage-alert {
+        border: 1px solid !important;
+        background-color: transparent !important;
+        padding: 1rem !important;
+        margin-bottom: 1.5rem !important;
+        font-family: 'Old Standard TT', serif !important;
+        font-style: italic !important;
+    }
+
+    .alert-success.vintage-alert {
+        color: var(--vintage-success) !important;
+        border-color: var(--vintage-success) !important;
+    }
+
+    .alert-danger.vintage-alert {
+        color: var(--vintage-danger) !important;
+        border-color: var(--vintage-danger) !important;
+    }
+
+    .empty-wishlist {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        color: var(--vintage-border);
+        margin-bottom: 1rem;
+    }
+
+    .empty-text {
+        font-size: 1.5rem;
+        color: var(--vintage-text);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-subtext {
+        color: var(--vintage-accent);
+        font-style: italic;
+        margin-bottom: 2rem;
+    }
+
+    .vintage-table-container {
+        background: rgba(212, 175, 55, 0.05);
+        padding: 1rem;
+        border: 1px solid var(--vintage-border);
+        margin-bottom: 2rem;
+    }
+
+    .vintage-table {
+        margin: 0;
+        border: none;
+    }
+
+    .vintage-table thead {
+        background: var(--vintage-primary);
+        color: var(--vintage-card);
+    }
+
+    .vintage-table thead th {
+        font-family: 'Playfair Display', serif;
+        padding: 1rem;
+        border: none;
+        font-size: 1.1rem;
+    }
+
+    .vintage-table tbody tr {
+        border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    }
+
+    .vintage-table tbody tr:hover {
+        background: rgba(212, 175, 55, 0.1);
+    }
+
+    .album-title {
+        font-weight: bold;
+        color: var(--vintage-primary);
+        font-size: 1.1rem;
+    }
+
+    .artist-name {
+        color: var(--vintage-accent);
+        font-style: italic;
+    }
+
+    .actions-cell {
+        min-width: 250px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-vintage,
+    .btn-vintage-secondary,
+    .btn-vintage-action,
+    .btn-vintage-danger {
+        font-family: 'Old Standard TT', serif !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.5rem !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .btn-vintage {
+        background-color: var(--vintage-primary) !important;
+        border-color: var(--vintage-border) !important;
+        color: var(--vintage-card) !important;
+        box-shadow: 3px 3px 0 var(--vintage-border) !important;
+    }
+
+    .btn-vintage:hover {
+        background-color: var(--vintage-accent) !important;
+        transform: translate(2px, 2px) !important;
+        box-shadow: 1px 1px 0 var(--vintage-border) !important;
+    }
+
+    .btn-vintage-secondary {
+        background-color: var(--vintage-card) !important;
+        border: 2px solid var(--vintage-border) !important;
+        color: var(--vintage-primary) !important;
+    }
+
+    .btn-vintage-action {
+        background-color: var(--vintage-accent) !important;
+        border-color: var(--vintage-border) !important;
+        color: var(--vintage-card) !important;
+    }
+
+    .btn-vintage-danger {
+        background-color: transparent !important;
+        border: 1px solid var(--vintage-danger) !important;
+        color: var(--vintage-danger) !important;
+    }
+
+    .btn-vintage-danger:hover {
+        background-color: var(--vintage-danger) !important;
+        color: var(--vintage-card) !important;
+    }
+
+    .wishlist-footer {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .wishlist-box {
+            padding: 1.5rem !important;
+            margin: 1rem !important;
+        }
+
+        .vintage-title {
+            font-size: 2rem !important;
+        }
+
+        .vinyl-line {
+            width: 40px !important;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .actions-cell {
+            min-width: 120px;
+        }
+
+        .wishlist-footer {
+            flex-direction: column;
+        }
+
+        .btn-vintage,
+        .btn-vintage-secondary,
+        .btn-vintage-action,
+        .btn-vintage-danger {
+            width: 100% !important;
+        }
+    }
+</style>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
 </body>
 </html>

@@ -27,24 +27,20 @@ $(document).ready(function() {
         }
     }
 
-    // 处理数量变更
     $('.quantity-input').on('change', function() {
         var $input = $(this);
         var recordId = $input.data('record-id');
         var quantity = parseInt($input.val());
         var $row = $input.closest('tr');
 
-        // 验证数量
         if (quantity < 1) {
             $input.val(1);
             quantity = 1;
         }
 
-        // 立即更新显示
         updateSubtotal($row);
         updateTotal();
 
-        // 发送到服务器
         $.ajax({
             url: '/cart/update-quantity',
             type: 'POST',

@@ -1,50 +1,278 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments :: head('My Account - Vintage Vinyl')}"></head>
+<head th:replace="~{fragments :: head('My Account - Vintage Vinyl')}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Old+Standard+TT:wght@400;700&display=swap" rel="stylesheet">
+</head>
 <body>
 <nav th:replace="~{fragments :: navigation}"></nav>
 
 <div class="container mt-5">
-    <h1>My Account</h1>
-
-    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-
-    <form th:action="@{/account}" th:object="${user}" method="post">
-        <input type="hidden" th:field="*{id}" />
-        <input type="hidden" th:field="*{username}" />
-
-        <div class="form-group">
-            <label for="username">Username:</label>
-            <input type="text" class="form-control" id="username" th:value="${user.username}" readonly>
-        </div>
-        <div class="form-group">
-            <label for="email">Email:</label>
-            <input type="email" class="form-control" id="email" th:field="*{email}" required>
+    <div class="account-box">
+        <div class="vintage-header">
+            <h1 class="vintage-title">My Account</h1>
+            <div class="record-decoration">
+                <div class="record-circle"></div>
+            </div>
         </div>
 
-        <h3 class="mt-4">Change Password</h3>
-        <div class="form-group">
-            <label for="currentPassword">Current Password:</label>
-            <input type="password" class="form-control" id="currentPassword" name="currentPassword">
-        </div>
-        <div class="form-group">
-            <label for="newPassword">New Password:</label>
-            <input type="password" class="form-control" id="newPassword" name="newPassword">
-        </div>
-        <div class="form-group">
-            <label for="confirmNewPassword">Confirm New Password:</label>
-            <input type="password" class="form-control" id="confirmNewPassword" name="confirmNewPassword">
-        </div>
+        <div th:if="${message}" class="alert alert-success vintage-alert" th:text="${message}"></div>
+        <div th:if="${error}" class="alert alert-danger vintage-alert" th:text="${error}"></div>
 
-        <button type="submit" class="btn btn-primary">Update Account</button>
-    </form>
+        <form th:action="@{/account}" th:object="${user}" method="post" class="vintage-form">
+            <input type="hidden" th:field="*{id}" />
+            <input type="hidden" th:field="*{username}" />
 
-    <a href="/dashboard" class="btn btn-secondary mt-3">Back to Dashboard</a>
+            <div class="form-section">
+                <h3 class="section-title">Account Details</h3>
+                <div class="form-group">
+                    <label for="username" class="vintage-label">Username:</label>
+                    <input type="text" class="form-control vintage-input" id="username" th:value="${user.username}" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="email" class="vintage-label">Email:</label>
+                    <input type="email" class="form-control vintage-input" id="email" th:field="*{email}" required>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">Change Password</h3>
+                <div class="form-group">
+                    <label for="currentPassword" class="vintage-label">Current Password:</label>
+                    <input type="password" class="form-control vintage-input" id="currentPassword" name="currentPassword">
+                </div>
+                <div class="form-group">
+                    <label for="newPassword" class="vintage-label">New Password:</label>
+                    <input type="password" class="form-control vintage-input" id="newPassword" name="newPassword">
+                </div>
+                <div class="form-group">
+                    <label for="confirmNewPassword" class="vintage-label">Confirm New Password:</label>
+                    <input type="password" class="form-control vintage-input" id="confirmNewPassword" name="confirmNewPassword">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn btn-vintage">Update Account</button>
+                <a href="/dashboard" class="btn btn-vintage-secondary">Back to Dashboard</a>
+            </div>
+        </form>
+    </div>
 </div>
+
+<style>
+    :root {
+        --vintage-primary: #2c1810;
+        --vintage-secondary: #d4af37;
+        --vintage-background: #f5e6d3;
+        --vintage-card: #fff9f0;
+        --vintage-text: #2c1810;
+        --vintage-accent: #8b4513;
+        --vintage-border: #d4af37;
+        --vintage-success: #3e5c3b;
+        --vintage-error: #a64242;
+    }
+
+    body {
+        font-family: 'Old Standard TT', serif !important;
+        background-color: var(--vintage-background) !important;
+        color: var(--vintage-text) !important;
+        background-image:
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"),
+                repeating-linear-gradient(45deg, #f5e6d3 0px, #f5e6d3 2px, #f0dcc3 2px, #f0dcc3 4px) !important;
+    }
+
+    .account-box {
+        background: var(--vintage-card) !important;
+        padding: 3rem !important;
+        border: 2px solid var(--vintage-border) !important;
+        position: relative !important;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+        margin-bottom: 2rem !important;
+    }
+
+    .account-box::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        border: 1px solid var(--vintage-border);
+        pointer-events: none;
+    }
+
+    .vintage-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 2px solid var(--vintage-border);
+        position: relative;
+    }
+
+    .record-decoration {
+        position: absolute;
+        bottom: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--vintage-card);
+        padding: 0 20px;
+    }
+
+    .record-circle {
+        width: 50px;
+        height: 50px;
+        background: var(--vintage-primary);
+        border-radius: 50%;
+        border: 2px solid var(--vintage-border);
+        position: relative;
+    }
+
+    .record-circle::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 10px;
+        height: 10px;
+        background: var(--vintage-border);
+        border-radius: 50%;
+    }
+
+    .vintage-title {
+        font-family: 'Playfair Display', serif !important;
+        color: var(--vintage-primary) !important;
+        font-size: 2.5rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 3px !important;
+        margin-bottom: 0.5rem !important;
+        text-shadow: 2px 2px 0px rgba(212, 175, 55, 0.2) !important;
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: rgba(212, 175, 55, 0.05);
+        border: 1px solid var(--vintage-border);
+        position: relative;
+    }
+
+    .section-title {
+        font-family: 'Playfair Display', serif !important;
+        color: var(--vintage-accent) !important;
+        font-size: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+        padding-bottom: 0.5rem !important;
+        border-bottom: 1px dashed var(--vintage-border) !important;
+    }
+
+    .vintage-label {
+        color: var(--vintage-text) !important;
+        font-family: 'Playfair Display', serif !important;
+        font-size: 1.1rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .vintage-input {
+        background-color: var(--vintage-card) !important;
+        border: 1px solid var(--vintage-border) !important;
+        padding: 0.75rem !important;
+        margin-bottom: 1rem !important;
+        font-family: 'Old Standard TT', serif !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .vintage-input:focus {
+        border-color: var(--vintage-primary) !important;
+        box-shadow: 0 0 0 0.2rem rgba(139, 94, 52, 0.25) !important;
+    }
+
+    .vintage-input[readonly] {
+        background-color: rgba(212, 175, 55, 0.1) !important;
+        border-style: dashed !important;
+    }
+
+    .vintage-alert {
+        border: 1px solid var(--vintage-border) !important;
+        background-color: transparent !important;
+        padding: 1rem !important;
+        margin-bottom: 1.5rem !important;
+        font-family: 'Old Standard TT', serif !important;
+        font-style: italic !important;
+    }
+
+    .alert-success.vintage-alert {
+        color: var(--vintage-success) !important;
+        border-color: var(--vintage-success) !important;
+    }
+
+    .alert-danger.vintage-alert {
+        color: var(--vintage-error) !important;
+        border-color: var(--vintage-error) !important;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn-vintage {
+        background-color: var(--vintage-primary) !important;
+        border-color: var(--vintage-border) !important;
+        color: var(--vintage-card) !important;
+        font-family: 'Old Standard TT', serif !important;
+        letter-spacing: 2px !important;
+        text-transform: uppercase !important;
+        padding: 0.75rem 1.5rem !important;
+        flex: 1 !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 3px 3px 0 var(--vintage-border) !important;
+    }
+
+    .btn-vintage:hover {
+        background-color: var(--vintage-accent) !important;
+        transform: translate(2px, 2px) !important;
+        box-shadow: 1px 1px 0 var(--vintage-border) !important;
+    }
+
+    .btn-vintage-secondary {
+        background-color: var(--vintage-card) !important;
+        border: 2px solid var(--vintage-border) !important;
+        color: var(--vintage-primary) !important;
+        font-family: 'Old Standard TT', serif !important;
+        letter-spacing: 2px !important;
+        text-transform: uppercase !important;
+        padding: 0.75rem 1.5rem !important;
+        flex: 1 !important;
+        transition: all 0.3s ease !important;
+        text-decoration: none !important;
+        text-align: center !important;
+    }
+
+    .btn-vintage-secondary:hover {
+        background-color: var(--vintage-border) !important;
+        color: var(--vintage-primary) !important;
+    }
+
+    @media (max-width: 768px) {
+        .account-box {
+            padding: 1.5rem !important;
+            margin: 1rem !important;
+        }
+
+        .vintage-title {
+            font-size: 2rem !important;
+        }
+
+        .button-group {
+            flex-direction: column;
+        }
+    }
+</style>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
 </body>
 </html>

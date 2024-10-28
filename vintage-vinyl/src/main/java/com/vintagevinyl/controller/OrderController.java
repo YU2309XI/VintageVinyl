@@ -7,6 +7,7 @@ import com.vintagevinyl.model.User;
 import com.vintagevinyl.service.ShoppingCartService;
 import com.vintagevinyl.service.UserService;
 import com.vintagevinyl.service.OrderService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,6 +32,8 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+    @Autowired
+    private HttpServletRequest request;
     @GetMapping("/checkout")
     @Transactional
     public String showCheckoutForm(@AuthenticationPrincipal UserDetails userDetails, Model model) {
@@ -73,15 +76,21 @@ public class OrderController {
         try {
             User user = userService.findByUsername(userDetails.getUsername());
             Order order;
-            if (userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+
+            boolean isAdmin = userDetails.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+            if (isAdmin) {
                 order = orderService.getOrderById(orderId);
             } else {
                 order = orderService.getOrderByIdAndUser(orderId, user);
             }
+
             model.addAttribute("order", order);
             return "order-details";
         } catch (OrderNotFoundException e) {
-            return "redirect:/error";
+            model.addAttribute("error", "Order not found");
+            return "redirect:/orders";
         }
     }
 
@@ -109,9 +118,16 @@ public class OrderController {
     @PostMapping("/admin/orders/{orderId}/update-status")
     @PreAuthorize("hasRole('ADMIN')")
     public String updateOrderStatus(@PathVariable("orderId") Long orderId,
-                                    @RequestParam("status") String status) {
-        orderService.updateOrderStatus(orderId, status);
-        return "redirect:/admin/orders/" + orderId;
+                                    @RequestParam("status") String status,
+                                    RedirectAttributes redirectAttributes,
+                                    HttpServletRequest request) {
+        try {
+            orderService.updateOrderStatus(orderId, status);
+            redirectAttributes.addFlashAttribute("message", "Order status updated successfully to " + status);
+            return "redirect:/admin/orders";        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error updating order status: " + e.getMessage());
+            return "redirect:/orders/" + orderId;
+        }
     }
 
     @PostMapping("/orders/{orderId}/cancel")
@@ -122,10 +138,19 @@ public class OrderController {
             User user = userService.findByUsername(userDetails.getUsername());
             orderService.cancelOrder(orderId, user);
             redirectAttributes.addFlashAttribute("message", "Order cancelled successfully.");
-        } catch (OrderNotFoundException | IllegalStateException e) {
+
+            if (userDetails.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                return "redirect:/admin/orders";
+            }
+            return "redirect:/orders";
+        } catch (OrderNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", "Order not found");
+            return "redirect:/orders";
+        } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/orders/" + orderId;
         }
-        return "redirect:/orders";
     }
 
 

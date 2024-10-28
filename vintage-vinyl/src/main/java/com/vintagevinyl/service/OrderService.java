@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,6 +21,8 @@ import java.util.List;
 
 @Service
 public class OrderService {
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
     @Autowired
     private OrderRepository orderRepository;
@@ -88,19 +92,32 @@ public class OrderService {
 
     @Transactional
     public void updateOrderStatus(Long orderId, String status) {
-        Order order = getOrderById(orderId);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
         order.setStatus(status);
         orderRepository.save(order);
+        // 添加日志
+        logger.info("Updated order {} status to {}", orderId, status);
     }
 
     @Transactional
     public void cancelOrder(Long orderId, User user) {
-        Order order = getOrderByIdAndUser(orderId, user);
-        if ("PENDING".equals(order.getStatus())) {
-            order.setStatus("CANCELLED");
-            orderRepository.save(order);
+        if (user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            Order order = getOrderById(orderId);
+            if ("PENDING".equals(order.getStatus())) {
+                order.setStatus("CANCELLED");
+                orderRepository.save(order);
+            } else {
+                throw new IllegalStateException("Order cannot be cancelled as it is not in PENDING status");
+            }
         } else {
-            throw new IllegalStateException("Order cannot be cancelled as it is not in PENDING status");
+            Order order = getOrderByIdAndUser(orderId, user);
+            if ("PENDING".equals(order.getStatus())) {
+                order.setStatus("CANCELLED");
+                orderRepository.save(order);
+            } else {
+                throw new IllegalStateException("Order cannot be cancelled as it is not in PENDING status");
+            }
         }
     }
 

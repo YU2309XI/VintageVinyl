@@ -21,6 +21,8 @@ import com.vintagevinyl.model.User;
 
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.time.LocalDate;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,22 +63,32 @@ public class RecordController {
             return "redirect:/records?error=Record+not+found";
         }
         model.addAttribute("record", record);
+        model.addAttribute("inStock", record.getStock() > 0);
+        model.addAttribute("stockStatus", record.getStock() == 0 ? "Out of Stock" :
+                (record.isLowStock() ? "Low Stock" : "In Stock"));
         return "record-detail";
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/new")
     public String newRecordForm(Model model) {
-        model.addAttribute("record", new Record());
+        Record record = new Record();
+        record.setLowStockThreshold(5); // Set default low stock threshold
+        model.addAttribute("record", record);
         return "record-form";
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public String saveRecord(@Valid @ModelAttribute Record record, BindingResult result) {
+    public String saveRecord(@Valid @ModelAttribute Record record,
+                             @RequestParam("releaseYear") Integer releaseYear,
+                             @RequestParam(value = "initialStock", defaultValue = "0") Integer initialStock,
+                             BindingResult result) {
         if (result.hasErrors()) {
             return "record-form";
         }
+        record.setReleaseDate(LocalDate.of(releaseYear, 1, 1));
+        record.setStock(initialStock); // Set initial stock
         recordService.saveRecord(record);
         return "redirect:/records";
     }
@@ -89,18 +101,43 @@ public class RecordController {
             throw new RecordNotFoundException("Record not found with id: " + id);
         }
         model.addAttribute("record", record);
+        model.addAttribute("currentStock", record.getStock());
+        model.addAttribute("lowStockThreshold", record.getLowStockThreshold());
         return "record-form";
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}")
-    public String updateRecord(@PathVariable Long id, @Valid @ModelAttribute Record record, BindingResult result) {
+    public String updateRecord(@PathVariable Long id,
+                               @Valid @ModelAttribute Record record,
+                               @RequestParam("releaseYear") Integer releaseYear,
+                               BindingResult result) {
         if (result.hasErrors()) {
             return "record-form";
         }
+
+        // Retrieve existing record's stock information
+        Record existingRecord = recordService.getRecordById(id);
         record.setId(id);
+        record.setStock(existingRecord.getStock()); // Keep original stock
+        record.setLowStockThreshold(existingRecord.getLowStockThreshold()); // Keep original threshold
+        record.setReleaseDate(LocalDate.of(releaseYear, 1, 1));
+
         recordService.updateRecord(record);
         return "redirect:/records";
+    }
+
+    @GetMapping("/{id}/stock-status")
+    @ResponseBody
+    public String checkStockStatus(@PathVariable Long id) {
+        Record record = recordService.getRecordById(id);
+        if (record.getStock() == 0) {
+            return "Out of Stock";
+        } else if (record.isLowStock()) {
+            return "Low Stock";
+        } else {
+            return "In Stock";
+        }
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -133,7 +170,8 @@ public class RecordController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/import")
-    public String handleImport(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+    public String handleImport(@RequestParam("file") MultipartFile file,
+                               RedirectAttributes redirectAttributes) {
         if (file.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Please select a file to upload.");
             return "redirect:/records/import";
@@ -141,7 +179,8 @@ public class RecordController {
 
         try {
             int importedCount = csvImportService.importCSVData(file.getInputStream());
-            redirectAttributes.addFlashAttribute("message", "Successfully imported " + importedCount + " records.");
+            redirectAttributes.addFlashAttribute("message",
+                    "Successfully imported " + importedCount + " records. Please check and update stock levels.");
         } catch (IOException e) {
             logger.error("Failed to import CSV file", e);
             redirectAttributes.addFlashAttribute("error", "Failed to import file: " + e.getMessage());

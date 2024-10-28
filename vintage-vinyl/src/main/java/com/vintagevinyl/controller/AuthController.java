@@ -46,7 +46,6 @@ public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    // 直接重定向到 dashboard
     @GetMapping("/")
     public String home() {
         return "redirect:/dashboard";  // Redirect to dashboard directly
@@ -136,11 +135,16 @@ public class AuthController {
         try {
             User currentUser = userService.findByUsername(username);
 
-            currentUser.setEmail(user.getEmail());
-            userService.updateUser(currentUser);
+            // 创建更新的用户对象，只包含要更新的字段
+            User updatedUser = new User();
+            updatedUser.setEmail(user.getEmail());
+            // 调用新版本的 updateUser 方法
+            userService.updateUser(currentUser.getId(), updatedUser, username);
 
+            // 如果需要更新密码
             if (currentPassword != null && !currentPassword.isEmpty()) {
-                if (newPassword == null || newPassword.isEmpty() || confirmNewPassword == null || confirmNewPassword.isEmpty()) {
+                if (newPassword == null || newPassword.isEmpty() ||
+                        confirmNewPassword == null || confirmNewPassword.isEmpty()) {
                     model.addAttribute("error", "New password and confirmation are required.");
                     return "account";
                 }
@@ -152,7 +156,8 @@ public class AuthController {
 
                 try {
                     userService.changeUserPassword(currentUser, currentPassword, newPassword);
-                    redirectAttributes.addFlashAttribute("message", "Account and password updated successfully.");
+                    redirectAttributes.addFlashAttribute("message",
+                            "Account and password updated successfully.");
                 } catch (IllegalArgumentException e) {
                     model.addAttribute("error", "Failed to update password: " + e.getMessage());
                     return "account";
@@ -163,6 +168,7 @@ public class AuthController {
 
             return "redirect:/account";
         } catch (Exception e) {
+            logger.error("Failed to update account for user: {}", username, e);
             model.addAttribute("error", "Failed to update account: " + e.getMessage());
             return "account";
         }

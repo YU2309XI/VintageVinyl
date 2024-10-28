@@ -1,43 +1,505 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments :: head('Admin Console - Vintage Vinyl')}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Old+Standard+TT:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <nav th:replace="~{fragments :: navigation}"></nav>
-<div class="container mt-5">
-    <h1>Admin Console</h1>
-    <p>Welcome to the admin console. Here you can manage users and perform other administrative tasks.</p>
 
-    <h2 class="mt-4">User Management</h2>
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Roles</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="user : ${users}">
-            <td th:text="${user.username}"></td>
-            <td th:text="${user.email}"></td>
-            <td>
-                <span th:each="role : ${user.roles}" th:text="${#strings.replace(role, 'ROLE_', '')} + ' '"></span>
-            </td>
-            <td>
-                <button th:if="${!user.roles.contains('ROLE_ADMIN')}"
-                        class="make-admin-btn"
-                        th:data-username="${user.username}">Make Admin</button>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+<div class="container mt-5">
+    <div class="admin-console-box">
+        <div class="vintage-header">
+            <h1 class="vintage-title">Admin Console</h1>
+            <div class="vinyl-decoration">
+                <div class="vinyl-line"></div>
+                <div class="vinyl-icon">♫</div>
+                <div class="vinyl-line"></div>
+            </div>
+            <p class="vintage-subtitle">Welcome to the admin console. Here you can manage users and perform other administrative tasks.</p>
+        </div>
+
+        <!-- Success/error message display area -->
+        <div class="alert alert-success vintage-alert" role="alert" id="successMessage" style="display: none;"></div>
+        <div class="alert alert-danger vintage-alert" role="alert" id="errorMessage" style="display: none;"></div>
+
+        <div class="content-section">
+            <h2 class="section-title">User Management</h2>
+            <div class="table-container">
+                <table class="table vintage-table">
+                    <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Roles</th>
+                        <th>Status</th>
+                        <th>Last Modified</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="user : ${users}">
+                        <td class="username" th:text="${user.username}"></td>
+                        <td class="email" th:text="${user.email}"></td>
+                        <td>
+                                <span th:each="role : ${user.roles}"
+                                      class="role-badge"
+                                      th:text="${#strings.replace(role, 'ROLE_', '')}"></span>
+                        </td>
+                        <td>
+                                <span th:if="${user.enabled}"
+                                      class="vintage-badge badge-active">Active</span>
+                            <span th:unless="${user.enabled}"
+                                  class="vintage-badge badge-inactive">Inactive</span>
+                            <span th:unless="${user.accountNonLocked}"
+                                  class="vintage-badge badge-locked">Locked</span>
+                        </td>
+                        <td class="timestamp">
+                                <span class="modified-by"
+                                      th:text="${user.lastModifiedBy != null ? 'By ' + user.lastModifiedBy : ''}"></span>
+                            <span class="modified-at"
+                                  th:text="${user.updatedAt != null ? #temporals.format(user.updatedAt, 'yyyy-MM-dd HH:mm') : ''}"></span>
+                        </td>
+                        <td class="action-buttons">
+                            <button th:if="${!user.roles.contains('ROLE_ADMIN')}"
+                                    class="btn btn-vintage make-admin-btn"
+                                    th:data-username="${user.username}">Make Admin</button>
+
+                            <button class="btn btn-vintage-alt edit-user-btn"
+                                    th:data-id="${user.id}"
+                                    th:data-username="${user.username}"
+                                    th:data-email="${user.email}">Edit</button>
+
+                            <button th:if="${user.enabled}"
+                                    class="btn btn-vintage-danger deactivate-user-btn"
+                                    th:data-id="${user.id}">Deactivate</button>
+                            <button th:unless="${user.enabled}"
+                                    class="btn btn-vintage-success activate-user-btn"
+                                    th:data-id="${user.id}">Activate</button>
+
+                            <button th:if="${user.accountNonLocked}"
+                                    class="btn btn-vintage-warning lock-user-btn"
+                                    th:data-id="${user.id}">Lock</button>
+                            <button th:unless="${user.accountNonLocked}"
+                                    class="btn btn-vintage-secondary unlock-user-btn"
+                                    th:data-id="${user.id}">Unlock</button>
+
+                            <button th:if="${!user.roles.contains('ROLE_ADMIN')}"
+                                    class="btn btn-vintage-danger delete-user-btn"
+                                    th:data-id="${user.id}"
+                                    th:data-username="${user.username}">Delete</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content vintage-modal">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit User</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId">
+                    <div class="form-group">
+                        <label for="editUsername" class="vintage-label">Username</label>
+                        <input type="text" class="form-control vintage-input" id="editUsername" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="editEmail" class="vintage-label">Email</label>
+                        <input type="email" class="form-control vintage-input" id="editEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPassword" class="vintage-label">New Password (leave blank to keep current)</label>
+                        <input type="password" class="form-control vintage-input" id="editPassword">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-vintage-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-vintage" id="saveUserEdit">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --vintage-primary: #2c1810;
+        --vintage-secondary: #d4af37;
+        --vintage-background: #f5e6d3;
+        --vintage-card: #fff9f0;
+        --vintage-text: #2c1810;
+        --vintage-accent: #8b4513;
+        --vintage-border: #d4af37;
+        --vintage-success: #3e5c3b;
+        --vintage-warning: #8b6e34;
+        --vintage-danger: #a64242;
+    }
+
+    body {
+        font-family: 'Old Standard TT', serif !important;
+        background-color: var(--vintage-background) !important;
+        color: var(--vintage-text) !important;
+        background-image:
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"),
+                repeating-linear-gradient(45deg, #f5e6d3 0px, #f5e6d3 2px, #f0dcc3 2px, #f0dcc3 4px) !important;
+    }
+
+    .admin-console-box {
+        background: var(--vintage-card) !important;
+        padding: 3rem !important;
+        border: 2px solid var(--vintage-border) !important;
+        position: relative !important;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+        margin-bottom: 2rem !important;
+    }
+
+    .admin-console-box::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        border: 1px solid var(--vintage-border);
+        pointer-events: none;
+    }
+
+    .vintage-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--vintage-border);
+    }
+
+    .vinyl-decoration {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 1rem 0;
+    }
+
+    .vinyl-line {
+        height: 2px;
+        width: 80px;
+        background: var(--vintage-border);
+        margin: 0 10px;
+    }
+
+    .vinyl-icon {
+        font-size: 24px;
+        color: var(--vintage-border);
+    }
+
+    .vintage-title {
+        font-family: 'Playfair Display', serif !important;
+        color: var(--vintage-primary) !important;
+        font-size: 2.8rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 3px !important;
+        text-shadow: 2px 2px 0px rgba(212, 175, 55, 0.2) !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .vintage-subtitle {
+        color: var(--vintage-accent);
+        font-style: italic;
+        margin: 1rem 0;
+    }
+
+    .section-title {
+        font-family: 'Playfair Display', serif !important;
+        color: var(--vintage-primary) !important;
+        font-size: 2rem !important;
+        margin-bottom: 1.5rem !important;
+        padding-bottom: 0.5rem !important;
+        border-bottom: 1px dashed var(--vintage-border) !important;
+    }
+
+    .table-container {
+        background: rgba(212, 175, 55, 0.05);
+        padding: 1.5rem;
+        border: 1px solid var(--vintage-border);
+    }
+
+    .vintage-table {
+        margin: 0;
+        border: none;
+    }
+
+    .vintage-table thead {
+        background: var(--vintage-primary);
+        color: var(--vintage-card);
+    }
+
+    .vintage-table thead th {
+        font-family: 'Playfair Display', serif;
+        padding: 1rem;
+        border: none;
+    }
+
+    .vintage-table tbody tr {
+        border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    }
+
+    .vintage-table tbody tr:hover {
+        background: rgba(212, 175, 55, 0.1);
+    }
+
+    .vintage-badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        margin-right: 0.5rem;
+    }
+
+    .badge-active {
+        background: rgba(62, 92, 59, 0.2);
+        color: var(--vintage-success);
+        border: 1px solid var(--vintage-success);
+    }
+
+    .badge-inactive {
+        background: rgba(166, 66, 66, 0.2);
+        color: var(--vintage-danger);
+        border: 1px solid var(--vintage-danger);
+    }
+
+    .badge-locked {
+        background: rgba(139, 110, 52, 0.2);
+        color: var(--vintage-warning);
+        border: 1px solid var(--vintage-warning);
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        margin: 0.25rem;
+        background: var(--vintage-primary);
+        color: var(--vintage-card);
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+
+    .timestamp {
+        font-size: 0.9rem;
+    }
+
+    .modified-by {
+        color: var(--vintage-accent);
+        display: block;
+    }
+
+    .modified-at {
+        font-style: italic;
+        color: var(--vintage-text);
+        opacity: 0.8;
+    }
+
+    .action-buttons {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;  /* 三列等宽布局 */
+        gap: 0.25rem !important;
+        min-width: 320px !important;
+    }
+
+    .btn-vintage,
+    .btn-vintage-secondary,
+    .btn-vintage-danger,
+    .btn-vintage-success,
+    .btn-vintage-warning,
+    .btn-vintage-alt {
+        width: 100% !important;
+        height: 38px !important;
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.85rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+    }
+
+    .btn-vintage {
+        background-color: var(--vintage-primary) !important;
+        border-color: var(--vintage-border) !important;
+        color: var(--vintage-card) !important;
+        box-shadow: 2px 2px 0 var(--vintage-border) !important;
+    }
+
+    .btn-vintage-secondary {
+        background-color: var(--vintage-card) !important;
+        border: 1px solid var(--vintage-border) !important;
+        color: var(--vintage-primary) !important;
+    }
+
+    .btn-vintage-danger {
+        background-color: transparent !important;
+        border: 1px solid var(--vintage-danger) !important;
+        color: var(--vintage-danger) !important;
+    }
+
+    .btn-vintage-success {
+        background-color: transparent !important;
+        border: 1px solid var(--vintage-success) !important;
+        color: var(--vintage-success) !important;
+    }
+
+    .btn-vintage-warning {
+        background-color: transparent !important;
+        border: 1px solid var(--vintage-warning) !important;
+        color: var(--vintage-warning) !important;
+    }
+
+    .btn-vintage-alt {
+        background-color: var(--vintage-accent) !important;
+        border-color: var(--vintage-border) !important;
+        color: var(--vintage-card) !important;
+    }
+
+    .btn-vintage:hover {
+        background-color: var(--vintage-accent) !important;
+        transform: translate(2px, 2px) !important;
+        box-shadow: none !important;
+    }
+
+    .btn-vintage-danger:hover {
+        background-color: var(--vintage-danger) !important;
+        color: var(--vintage-card) !important;
+    }
+
+    .btn-vintage-success:hover {
+        background-color: var(--vintage-success) !important;
+        color: var(--vintage-card) !important;
+    }
+
+    .btn-vintage-warning:hover {
+        background-color: var(--vintage-warning) !important;
+        color: var(--vintage-card) !important;
+    }
+
+    /* Modal Styles */
+    .vintage-modal {
+        background-color: var(--vintage-card) !important;
+        border: 2px solid var(--vintage-border) !important;
+    }
+
+    .vintage-modal .modal-header {
+        border-bottom: 2px solid var(--vintage-border) !important;
+        background-color: var(--vintage-primary) !important;
+        color: var(--vintage-card) !important;
+    }
+
+    .vintage-modal .modal-title {
+        font-family: 'Playfair Display', serif !important;
+        letter-spacing: 2px !important;
+    }
+
+    .vintage-modal .close {
+        color: var(--vintage-card) !important;
+        opacity: 0.8 !important;
+    }
+
+    .vintage-modal .close:hover {
+        opacity: 1 !important;
+    }
+
+    .vintage-label {
+        color: var(--vintage-text) !important;
+        font-family: 'Playfair Display', serif !important;
+        font-size: 1.1rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .vintage-input {
+        background-color: var(--vintage-card) !important;
+        border: 1px solid var(--vintage-border) !important;
+        padding: 0.75rem !important;
+        font-family: 'Old Standard TT', serif !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .vintage-input:focus {
+        border-color: var(--vintage-primary) !important;
+        box-shadow: 0 0 0 0.2rem rgba(139, 94, 52, 0.25) !important;
+    }
+
+    .vintage-input[readonly] {
+        background-color: rgba(212, 175, 55, 0.1) !important;
+        border-style: dashed !important;
+    }
+
+    .vintage-alert {
+        border: 1px solid !important;
+        background-color: transparent !important;
+        padding: 1rem !important;
+        margin-bottom: 1.5rem !important;
+        font-family: 'Old Standard TT', serif !important;
+        font-style: italic !important;
+    }
+
+    .alert-success.vintage-alert {
+        color: var(--vintage-success) !important;
+        border-color: var(--vintage-success) !important;
+    }
+
+    .alert-danger.vintage-alert {
+        color: var(--vintage-danger) !important;
+        border-color: var(--vintage-danger) !important;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .admin-console-box {
+            padding: 1.5rem !important;
+            margin: 1rem !important;
+        }
+
+        .vintage-title {
+            font-size: 2rem !important;
+        }
+
+        .vinyl-line {
+            width: 40px !important;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-vintage,
+        .btn-vintage-secondary,
+        .btn-vintage-danger,
+        .btn-vintage-success,
+        .btn-vintage-warning,
+        .btn-vintage-alt {
+            width: 100% !important;
+            margin: 0.25rem 0 !important;
+        }
+
+        .vintage-table {
+            display: block;
+            overflow-x: auto;
+        }
+
+        .timestamp {
+            min-width: 120px;
+        }
+    }
+</style>
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script src="/admin-console.js"></script> <!-- External JS file for admin-console -->
+<script src="/admin-console.js"></script>
+
 </body>
 </html>

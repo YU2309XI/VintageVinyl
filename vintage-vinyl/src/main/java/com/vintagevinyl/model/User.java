@@ -40,6 +40,15 @@ public class User implements UserDetails {
     @NotBlank(message = "Password is required", groups = {CreateUser.class})
     private String password;
 
+    @Column(nullable = false)
+    private boolean enabled = true; // 默认激活
+
+    @Column(nullable = false)
+    private boolean accountNonLocked = true; // 默认未锁定
+
+    @Column(name = "last_modified_by")
+    private String lastModifiedBy;
+
     public interface CreateUser {}
 
     @Column(nullable = false, unique = true, length = 100)
@@ -86,7 +95,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return accountNonLocked;
     }
 
     @Override
@@ -96,7 +105,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 
     @Override

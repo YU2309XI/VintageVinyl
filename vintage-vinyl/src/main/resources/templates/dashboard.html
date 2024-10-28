@@ -2,26 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments :: head('Dashboard - Vintage Vinyl')}">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .container {
-            max-width: 1200px;
-        }
-        .card {
-            margin-bottom: 20px;
-        }
-        .row {
-            justify-content: center;
-        }
-        .admin-section {
-            margin-top: 40px;
-        }
-        h1, p {
-            text-align: center;
-        }
-        .btn-primary, .btn-danger {
-            width: 100%;
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Old+Standard+TT:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <nav th:replace="~{fragments :: navigation}"></nav>
@@ -29,37 +10,42 @@
 <div class="container mt-5">
     <!-- User-specific content -->
     <div sec:authorize="isAuthenticated()">
-        <h1 class="mb-4">Welcome to your Dashboard, <span th:text="${username}">User</span>!</h1>
-        <p>Your role(s): <span th:text="${#authentication.authorities}">No roles assigned</span></p>
+        <div class="vintage-header">
+            <h1 class="mb-4">Welcome to your Dashboard, <span th:text="${username}">User</span>!</h1>
+            <p class="role-text">Your role(s): <span th:text="${#authentication.authorities}">No roles assigned</span></p>
+        </div>
 
         <div class="row">
             <!-- Non-admin functionalities -->
             <div class="col-md-4" sec:authorize="!hasRole('ADMIN')">
-                <div class="card shadow-sm">
+                <div class="vintage-card">
                     <div class="card-body">
+                        <div class="vintage-icon">📦</div>
                         <h5 class="card-title">My Orders</h5>
                         <p class="card-text">View and manage your orders.</p>
-                        <a href="/orders" class="btn btn-primary">View Orders</a>
+                        <a href="/orders" class="btn btn-vintage">View Orders</a>
                     </div>
                 </div>
             </div>
 
             <div class="col-md-4" sec:authorize="!hasRole('ADMIN')">
-                <div class="card shadow-sm">
+                <div class="vintage-card">
                     <div class="card-body">
+                        <div class="vintage-icon">👤</div>
                         <h5 class="card-title">My Account</h5>
                         <p class="card-text">Update your account information.</p>
-                        <a href="/account" class="btn btn-primary">Manage Account</a>
+                        <a href="/account" class="btn btn-vintage">Manage Account</a>
                     </div>
                 </div>
             </div>
 
             <div class="col-md-4" sec:authorize="!hasRole('ADMIN')">
-                <div class="card shadow-sm">
+                <div class="vintage-card">
                     <div class="card-body">
+                        <div class="vintage-icon">♥️</div>
                         <h5 class="card-title">Wishlist</h5>
                         <p class="card-text">View and manage your wishlist.</p>
-                        <a href="/wishlist" class="btn btn-primary">View Wishlist</a>
+                        <a href="/wishlist" class="btn btn-vintage">View Wishlist</a>
                     </div>
                 </div>
             </div>
@@ -68,21 +54,23 @@
         <!-- Admin functionalities -->
         <div class="admin-section row">
             <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
-                <div class="card shadow-sm">
+                <div class="vintage-card admin-card">
                     <div class="card-body">
+                        <div class="vintage-icon">⚙️</div>
                         <h5 class="card-title">Admin Console</h5>
                         <p class="card-text">Access admin-only features.</p>
-                        <a href="/admin" class="btn btn-danger">Go to Admin Console</a>
+                        <a href="/admin" class="btn btn-vintage-admin">Go to Admin Console</a>
                     </div>
                 </div>
             </div>
 
             <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
-                <div class="card shadow-sm">
+                <div class="vintage-card admin-card">
                     <div class="card-body">
+                        <div class="vintage-icon">📋</div>
                         <h5 class="card-title">Manage Orders</h5>
                         <p class="card-text">View and manage all orders.</p>
-                        <a href="/admin/orders" class="btn btn-danger">Manage Orders</a>
+                        <a href="/admin/orders" class="btn btn-vintage-admin">Manage Orders</a>
                     </div>
                 </div>
             </div>
@@ -91,17 +79,209 @@
 
     <!-- Guest users -->
     <div sec:authorize="!isAuthenticated()">
-        <h1 class="mb-4">Welcome to Vintage Vinyl</h1>
-        <p>Please log in to view your dashboard.</p>
-        <div class="text-center">
-            <a href="/login" class="btn btn-primary">Login</a>
+        <div class="vintage-header">
+            <h1 class="mb-4">Welcome to Vintage Vinyl</h1>
+            <p>Please log in to view your dashboard.</p>
+            <div class="text-center">
+                <a href="/login" class="btn btn-vintage">Login</a>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Enhanced Vintage Styles */
+    :root {
+        --vintage-primary: #2c1810;
+        --vintage-secondary: #d4af37;
+        --vintage-background: #f5e6d3;
+        --vintage-card: #fff9f0;
+        --vintage-text: #2c1810;
+        --vintage-accent: #8b4513;
+        --vintage-border: #d4af37;
+    }
+
+    body {
+        font-family: 'Old Standard TT', serif !important;
+        background-color: var(--vintage-background) !important;
+        color: var(--vintage-text) !important;
+        background-image:
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"),
+                repeating-linear-gradient(45deg, #f5e6d3 0px, #f5e6d3 2px, #f0dcc3 2px, #f0dcc3 4px) !important;
+    }
+
+    .container {
+        max-width: 1200px !important;
+        background: var(--vintage-card) !important;
+        padding: 3rem !important;
+        border-radius: 0 !important;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+        border: 2px solid var(--vintage-border) !important;
+        position: relative !important;
+    }
+
+    .container::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        border: 1px solid var(--vintage-border);
+        pointer-events: none;
+    }
+
+    .vintage-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 2px solid var(--vintage-border);
+        position: relative;
+    }
+
+    .vintage-header::after {
+        content: "★";
+        position: absolute;
+        bottom: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--vintage-card);
+        padding: 0 15px;
+        color: var(--vintage-border);
+        font-size: 20px;
+    }
+
+    h1 {
+        font-family: 'Playfair Display', serif !important;
+        font-size: 2.8rem !important;
+        color: var(--vintage-primary) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 2px !important;
+        margin-bottom: 1rem !important;
+        font-weight: bold !important;
+        text-shadow: 2px 2px 0px rgba(212, 175, 55, 0.2) !important;
+    }
+
+    .vintage-card {
+        background-color: var(--vintage-card) !important;
+        border: 1px solid var(--vintage-border) !important;
+        margin-bottom: 30px !important;
+        transition: transform 0.3s ease !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+
+    .vintage-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(45deg, var(--vintage-border), transparent);
+    }
+
+    .vintage-card:hover {
+        transform: translateY(-5px) !important;
+    }
+
+    .vintage-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .card-title {
+        font-family: 'Playfair Display', serif !important;
+        color: var(--vintage-primary) !important;
+        font-size: 1.5rem !important;
+        text-align: center !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .card-text {
+        color: var(--vintage-text) !important;
+        text-align: center !important;
+        font-size: 1.1rem !important;
+    }
+
+    .btn-vintage {
+        background-color: var(--vintage-primary) !important;
+        border-color: var(--vintage-border) !important;
+        color: var(--vintage-card) !important;
+        font-family: 'Old Standard TT', serif !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+        padding: 0.75rem 1.5rem !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 3px 3px 0 var(--vintage-border) !important;
+    }
+
+    .btn-vintage:hover {
+        background-color: var(--vintage-accent) !important;
+        transform: translate(2px, 2px) !important;
+        box-shadow: 1px 1px 0 var(--vintage-border) !important;
+    }
+
+    .btn-vintage-admin {
+        background-color: var(--vintage-accent) !important;
+        border-color: var(--vintage-border) !important;
+        color: var(--vintage-card) !important;
+        font-family: 'Old Standard TT', serif !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+        padding: 0.75rem 1.5rem !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 3px 3px 0 var(--vintage-border) !important;
+    }
+
+    .btn-vintage-admin:hover {
+        background-color: var(--vintage-primary) !important;
+        transform: translate(2px, 2px) !important;
+        box-shadow: 1px 1px 0 var(--vintage-border) !important;
+    }
+
+    .admin-section {
+        margin-top: 40px !important;
+        border-top: 2px solid var(--vintage-border) !important;
+        padding-top: 40px !important;
+        position: relative !important;
+    }
+
+    .admin-section::before {
+        content: "Administrative Area";
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--vintage-card);
+        padding: 0 15px;
+        color: var(--vintage-accent);
+        font-family: 'Playfair Display', serif;
+        font-style: italic;
+    }
+
+    .role-text {
+        font-family: 'Old Standard TT', serif !important;
+        color: var(--vintage-accent) !important;
+        font-style: italic !important;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 1.5rem !important;
+        }
+
+        h1 {
+            font-size: 2rem !important;
+        }
+    }
+</style>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="/dashboard.js"></script>
+
 </body>
 </html>
