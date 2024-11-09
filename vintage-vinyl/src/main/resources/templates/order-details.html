@@ -3,6 +3,7 @@
 <head th:replace="~{fragments :: head('Order Details - Vintage Vinyl')}">
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Old+Standard+TT:wght@400;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -106,91 +107,219 @@
 
 <!-- Custom Vintage CSS -->
 <style>
-    /* Vintage styling */
+    :root {
+        --vintage-primary: #2c1810;
+        --vintage-secondary: #d4af37;
+        --vintage-background: #f5e6d3;
+        --vintage-card: #fff9f0;
+        --vintage-text: #2c1810;
+        --vintage-accent: #8b4513;
+        --vintage-border: #d4af37;
+        --vintage-success: #3e5c3b;
+        --vintage-error: #a64242;
+        --vintage-warning: #d4982d;
+    }
+
     body {
-        font-family: 'Roboto Slab', serif;
-        background-color: #faf4e5;
-        color: #4a3c31;
+        font-family: 'Old Standard TT', serif !important;
+        background-color: var(--vintage-background) !important;
+        color: var(--vintage-text) !important;
+        background-image:
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"),
+                repeating-linear-gradient(45deg, #f5e6d3 0px, #f5e6d3 2px, #f0dcc3 2px, #f0dcc3 4px) !important;
     }
 
     .vintage-container {
-        background-color: #f7efe3;
-        padding: 2rem;
-        border-radius: 10px;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        background: var(--vintage-card) !important;
+        padding: 3rem !important;
+        border: 2px solid var(--vintage-border) !important;
+        position: relative !important;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+        margin-bottom: 2rem !important;
+    }
+
+    .vintage-container::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        border: 1px solid var(--vintage-border);
+        pointer-events: none;
     }
 
     .vintage-title {
-        color: #4a3c31;
-        font-weight: bold;
-        font-size: 2.5rem;
-        text-align: center;
+        font-family: 'Playfair Display', serif !important;
+        color: var(--vintage-primary) !important;
+        font-size: 2.5rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 3px !important;
+        text-align: center !important;
+        margin-bottom: 2rem !important;
+        text-shadow: 2px 2px 0px rgba(212, 175, 55, 0.2) !important;
     }
 
     .vintage-section-title {
-        color: #6c5c54;
-        font-weight: bold;
-        margin-top: 20px;
+        font-family: 'Playfair Display', serif !important;
+        color: var(--vintage-accent) !important;
+        font-size: 1.5rem !important;
+        margin: 2rem 0 1rem !important;
+        padding-bottom: 0.5rem !important;
+        border-bottom: 1px dashed var(--vintage-border) !important;
     }
 
+    /* Card styling */
     .vintage-card {
-        border: 1px solid #d1b894;
-        background-color: #fdfcf8;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background: var(--vintage-card) !important;
+        border: 1px solid var(--vintage-border) !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+        margin-bottom: 2rem !important;
     }
 
     .vintage-card-header {
-        background-color: #d1b894;
-        color: #3e2723;
-        font-weight: bold;
+        background: rgba(212, 175, 55, 0.1) !important;
+        border-bottom: 2px solid var(--vintage-border) !important;
+        color: var(--vintage-primary) !important;
+        font-family: 'Playfair Display', serif !important;
+        padding: 1rem !important;
     }
 
+    .card-body {
+        padding: 1.5rem !important;
+    }
+
+    .card-body strong {
+        font-family: 'Playfair Display', serif !important;
+        color: var(--vintage-accent) !important;
+    }
+
+    /* Alert styling */
     .vintage-alert {
-        border-radius: 8px;
-        font-weight: bold;
-        border: 1px solid #d1b894;
+        border: 1px solid var(--vintage-border) !important;
+        background-color: transparent !important;
+        padding: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+        font-family: 'Old Standard TT', serif !important;
+        font-style: italic !important;
     }
 
     .alert-success.vintage-alert {
-        background-color: #d7e7d6;
-        color: #3e5c3b;
+        color: var(--vintage-success) !important;
+        border-color: var(--vintage-success) !important;
     }
 
     .alert-danger.vintage-alert {
-        background-color: #f2d7d5;
-        color: #a94442;
+        color: var(--vintage-error) !important;
+        border-color: var(--vintage-error) !important;
+    }
+
+    .alert-warning.vintage-alert {
+        color: var(--vintage-warning) !important;
+        border-color: var(--vintage-warning) !important;
     }
 
     /* Table styling */
-    .vintage-table th, .vintage-table td {
-        border-color: #d1b894;
-        padding: 0.75rem;
+    .vintage-table {
+        background: var(--vintage-card) !important;
+        border: 1px solid var(--vintage-border) !important;
+        margin: 1.5rem 0 !important;
     }
 
     .vintage-thead {
-        background-color: #d1b894;
-        color: #3e2723;
-        font-weight: bold;
+        background: rgba(212, 175, 55, 0.1) !important;
+        border-bottom: 2px solid var(--vintage-border) !important;
+    }
+
+    .vintage-table th,
+    .vintage-table td {
+        border-color: var(--vintage-border) !important;
+        padding: 1rem !important;
+        font-family: 'Old Standard TT', serif !important;
+        color: var(--vintage-text) !important;
+        vertical-align: middle !important;
+    }
+
+    /* Form styling */
+    .vintage-input {
+        background-color: var(--vintage-card) !important;
+        border: 1px solid var(--vintage-border) !important;
+        padding: 0.75rem !important;
+        margin-bottom: 1rem !important;
+        font-family: 'Old Standard TT', serif !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .vintage-input:focus {
+        border-color: var(--vintage-primary) !important;
+        box-shadow: 0 0 0 0.2rem rgba(139, 94, 52, 0.25) !important;
+    }
+
+    label {
+        color: var(--vintage-text) !important;
+        font-family: 'Playfair Display', serif !important;
+        font-size: 1.1rem !important;
+        margin-bottom: 0.5rem !important;
     }
 
     /* Button styling */
-    .vintage-btn {
-        font-family: 'Roboto Slab', serif;
-        background-color: #8b5e34;
-        border-color: #8b5e34;
-        color: #fff;
+    .btn.vintage-btn {
+        font-family: 'Old Standard TT', serif !important;
+        letter-spacing: 2px !important;
+        text-transform: uppercase !important;
+        padding: 0.5rem 1rem !important;
+        transition: all 0.3s ease !important;
+        margin: 0.25rem !important;
     }
 
-    .vintage-btn:hover {
-        background-color: #6d4c30;
-        border-color: #6d4c30;
+    .btn-primary.vintage-btn {
+        background-color: var(--vintage-primary) !important;
+        border-color: var(--vintage-border) !important;
+        color: var(--vintage-card) !important;
+        box-shadow: 2px 2px 0 var(--vintage-border) !important;
+    }
+
+    .btn-primary.vintage-btn:hover {
+        background-color: var(--vintage-accent) !important;
+        transform: translate(1px, 1px) !important;
+        box-shadow: 1px 1px 0 var(--vintage-border) !important;
+    }
+
+    .btn-warning.vintage-btn {
+        background-color: var(--vintage-warning) !important;
+        border-color: var(--vintage-border) !important;
+        color: var(--vintage-card) !important;
+        box-shadow: 2px 2px 0 var(--vintage-border) !important;
+    }
+
+    .btn-warning.vintage-btn:hover {
+        background-color: #b37d24 !important;
+        transform: translate(1px, 1px) !important;
+        box-shadow: 1px 1px 0 var(--vintage-border) !important;
+    }
+
+    .btn-secondary.vintage-btn {
+        background-color: var(--vintage-card) !important;
+        border: 2px solid var(--vintage-border) !important;
+        color: var(--vintage-primary) !important;
+        box-shadow: 2px 2px 0 var(--vintage-border) !important;
+    }
+
+    .btn-secondary.vintage-btn:hover {
+        background-color: var(--vintage-border) !important;
+        transform: translate(1px, 1px) !important;
+        box-shadow: 1px 1px 0 var(--vintage-border) !important;
     }
 
     /* Total text styling */
+    .vintage-total {
+        text-align: right !important;
+    }
+
     .vintage-total h4 {
-        color: #4a3c31;
-        font-weight: bold;
+        font-family: 'Playfair Display', serif !important;
+        color: var(--vintage-primary) !important;
+        font-size: 1.5rem !important;
     }
 </style>
 

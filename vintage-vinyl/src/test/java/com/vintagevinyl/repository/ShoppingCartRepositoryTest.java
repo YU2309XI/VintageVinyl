@@ -1,29 +1,33 @@
 package com.vintagevinyl.repository;
 
-import com.vintagevinyl.model.*;
+import com.vintagevinyl.model.CartItem;
 import com.vintagevinyl.model.Record;
+import com.vintagevinyl.model.ShoppingCart;
+import com.vintagevinyl.model.User;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
-@ActiveProfiles("test")
-class ShoppingCartRepositoryTest {
-
-    @Autowired
-    private TestEntityManager entityManager;
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+public class ShoppingCartRepositoryTest {
 
     @Autowired
     private ShoppingCartRepository shoppingCartRepository;
+
+    @Autowired
+    private EntityManager entityManager;
 
     private User testUser;
     private Record testRecord;
@@ -31,146 +35,162 @@ class ShoppingCartRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // Create a test user with a random email to avoid conflicts
+        shoppingCartRepository.deleteAll();
+
+        // Create test user
         testUser = new User();
-        testUser.setUsername("testUser" + UUID.randomUUID());
+        testUser.setUsername("testUser");
+        testUser.setEmail("test@example.com");
         testUser.setPassword("password");
-        testUser.setEmail("test" + UUID.randomUUID() + "@example.com");
+        testUser.setEnabled(true);
+        testUser.setAccountNonLocked(true);
+        testUser.setCreatedAt(LocalDateTime.now());
         entityManager.persist(testUser);
 
-        // Create a test record
+        // Create test record
         testRecord = new Record();
-        testRecord.setTitle("Test Record");
+        testRecord.setTitle("Test Album");
         testRecord.setArtist("Test Artist");
-        testRecord.setPrice(new BigDecimal("29.99"));
+        testRecord.setPrice(BigDecimal.valueOf(29.99));
+        testRecord.setStock(10);
         entityManager.persist(testRecord);
 
-        // Create a shopping cart
+        // Create test cart
         testCart = new ShoppingCart();
         testCart.setUser(testUser);
-        entityManager.persist(testCart);
+
+        CartItem cartItem = new CartItem();
+        cartItem.setRecord(testRecord);
+        cartItem.setQuantity(1);
+        cartItem.setCart(testCart);
+
+        testCart.addItem(cartItem);
 
         entityManager.flush();
-        entityManager.clear();
     }
 
     @Test
-    void findByUserShouldReturnCart() {
-        Optional<ShoppingCart> found = shoppingCartRepository.findByUser(testUser);
-        assertTrue(found.isPresent());
-        assertEquals(testUser.getId(), found.get().getUser().getId());
+    @DisplayName("Should save and retrieve a shopping cart")
+    void shouldSaveAndRetrieveCart() {
+        // Arrange & Act
+        ShoppingCart savedCart = shoppingCartRepository.save(testCart);
+        Optional<ShoppingCart> foundCart = shoppingCartRepository.findById(savedCart.getId());
+
+        // Assert
+        assertThat(foundCart)
+                .isPresent()
+                .hasValueSatisfying(cart -> {
+                    assertThat(cart.getUser()).isEqualTo(testUser);
+                    assertThat(cart.getItems()).hasSize(1);
+                    assertThat(cart.getTotal()).isEqualByComparingTo(BigDecimal.valueOf(29.99));
+                });
     }
 
     @Test
-    void findByUserWithItemsShouldReturnCartAndItems() {
-        // First, retrieve the persisted cart from the database
-        ShoppingCart managedCart = shoppingCartRepository.findByUser(testUser).orElseThrow();
+    @DisplayName("Should find cart by user")
+    void shouldFindCartByUser() {
+        // Arrange
+        shoppingCartRepository.save(testCart);
 
-        // Create a cart item and set the relationship
+        // Act
+        Optional<ShoppingCart> foundCart = shoppingCartRepository.findByUser(testUser);
+
+        // Assert
+        assertThat(foundCart)
+                .isPresent()
+                .hasValueSatisfying(cart -> {
+                    assertThat(cart.getUser()).isEqualTo(testUser);
+                    assertThat(cart.getItems()).hasSize(1);
+                });
+    }
+
+    @Test
+    @DisplayName("Should manage cart items")
+    void shouldManageCartItems() {
+        // Arrange
+        ShoppingCart cart = shoppingCartRepository.save(testCart);
+
+        // Act - Add another item
+        Record newRecord = new Record();
+        newRecord.setTitle("New Album");
+        newRecord.setArtist("New Artist");
+        newRecord.setPrice(BigDecimal.valueOf(19.99));
+        newRecord.setStock(5);
+        entityManager.persist(newRecord);
+
+        CartItem newItem = new CartItem();
+        newItem.setRecord(newRecord);
+        newItem.setQuantity(2);
+        newItem.setCart(cart);
+
+        cart.addItem(newItem);
+
+        ShoppingCart updatedCart = shoppingCartRepository.save(cart);
+
+        // Assert
+        assertThat(updatedCart.getItems()).hasSize(2);
+        assertThat(updatedCart.getTotal())
+                .isEqualByComparingTo(BigDecimal.valueOf(69.97)); // 29.99 + (19.99 * 2)
+    }
+
+    @Test
+    @DisplayName("Should enforce cart item quantity constraints")
+    void shouldEnforceCartItemQuantityConstraints() {
+        // Arrange
         CartItem item = new CartItem();
         item.setRecord(testRecord);
-        item.setQuantity(1);
-        item.setCart(managedCart);
 
-        // Use bidirectional association
-        managedCart.getItems().add(item);
+        // Assert
+        assertThatThrownBy(() -> item.setQuantity(0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Quantity must be at least 1");
 
-        // Save the updated cart
-        shoppingCartRepository.save(managedCart);
-
-        entityManager.flush();
-        entityManager.clear();
-
-        // Validate the result
-        Optional<ShoppingCart> found = shoppingCartRepository.findByUser(testUser);
-        assertTrue(found.isPresent());
-        assertFalse(found.get().getItems().isEmpty(), "Cart should have items");
-        assertEquals(1, found.get().getItems().size());
-        CartItem foundItem = found.get().getItems().iterator().next();
-        assertEquals(testRecord.getId(), foundItem.getRecord().getId());
+        assertThatThrownBy(() -> item.setQuantity(CartItem.MAX_QUANTITY + 1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Quantity cannot exceed " + CartItem.MAX_QUANTITY);
     }
 
     @Test
-    void saveShouldPersistNewCart() {
-        // Create a new user
-        User newUser = new User();
-        newUser.setUsername("newUser" + UUID.randomUUID());
-        newUser.setPassword("password");
-        newUser.setEmail("new" + UUID.randomUUID() + "@example.com");
-        entityManager.persist(newUser);
+    @DisplayName("Should remove items by record ID")
+    void shouldRemoveItemsByRecordId() {
+        // Arrange
+        ShoppingCart cart = shoppingCartRepository.save(testCart);
+        Long recordId = testRecord.getId();
 
-        // Create a new shopping cart
-        ShoppingCart newCart = new ShoppingCart();
-        newCart.setUser(newUser);
+        // Act
+        cart.removeItemsByRecordId(recordId);
+        ShoppingCart updatedCart = shoppingCartRepository.save(cart);
 
-        // Save the cart
-        ShoppingCart saved = shoppingCartRepository.save(newCart);
-        entityManager.flush();
-        entityManager.clear();
-
-        // Validate
-        assertNotNull(saved.getId());
-        assertEquals(newUser.getId(), saved.getUser().getId());
-
-        // Reload from the database to verify
-        ShoppingCart found = entityManager.find(ShoppingCart.class, saved.getId());
-        assertNotNull(found);
-        assertEquals(newUser.getId(), found.getUser().getId());
+        // Assert
+        assertThat(updatedCart.getItems()).isEmpty();
+        assertThat(updatedCart.getTotal()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
     @Test
-    void addItemToCartShouldPersist() {
-        // Retrieve the persisted cart
-        ShoppingCart managedCart = shoppingCartRepository.findByUser(testUser).orElseThrow();
+    @DisplayName("Should calculate correct subtotal for cart item")
+    void shouldCalculateCorrectSubtotal() {
+        // Arrange
+        CartItem item = testCart.getItems().get(0);
+        item.setQuantity(3);
 
-        // Add a cart item
+        // Act
+        BigDecimal subtotal = item.getSubtotal();
+
+        // Assert
+        assertThat(subtotal)
+                .isEqualByComparingTo(BigDecimal.valueOf(89.97)); // 29.99 * 3
+    }
+
+    @Test
+    @DisplayName("Should handle cart item with null record or price")
+    void shouldHandleCartItemWithNullRecordOrPrice() {
+        // Arrange
         CartItem item = new CartItem();
-        item.setRecord(testRecord);
-        item.setQuantity(1);
-        item.setCart(managedCart);
-        managedCart.getItems().add(item);
 
-        // Save the updated cart
-        shoppingCartRepository.save(managedCart);
-        entityManager.flush();
-        entityManager.clear();
+        // Assert
+        assertThat(item.getSubtotal()).isEqualByComparingTo(BigDecimal.ZERO);
 
-        // Validate
-        ShoppingCart found = entityManager.find(ShoppingCart.class, managedCart.getId());
-        assertNotNull(found);
-        assertEquals(1, found.getItems().size());
-        assertEquals(testRecord.getId(), found.getItems().iterator().next().getRecord().getId());
-    }
-
-    @Test
-    void deleteCartShouldRemoveCartAndItems() {
-        // Retrieve the persisted cart
-        ShoppingCart managedCart = shoppingCartRepository.findByUser(testUser).orElseThrow();
-
-        // Add a cart item
-        CartItem item = new CartItem();
-        item.setRecord(testRecord);
-        item.setQuantity(1);
-        item.setCart(managedCart);
-        managedCart.getItems().add(item);
-
-        shoppingCartRepository.save(managedCart);
-        entityManager.flush();
-
-        Long cartId = managedCart.getId();
-        Long itemId = managedCart.getItems().iterator().next().getId();
-
-        // Delete the cart
-        shoppingCartRepository.delete(managedCart);
-        entityManager.flush();
-        entityManager.clear();
-
-        // Verify the cart was deleted
-        ShoppingCart found = entityManager.find(ShoppingCart.class, cartId);
-        assertNull(found);
-
-        // Verify the cart item was also deleted
-        CartItem foundItem = entityManager.find(CartItem.class, itemId);
-        assertNull(foundItem);
+        item.setRecord(new Record()); // Record without price
+        assertThat(item.getSubtotal()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 }

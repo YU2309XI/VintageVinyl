@@ -6,13 +6,131 @@
 
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-6 text-center">
-            <h1 class="mb-4">Oops! An Error Occurred</h1>
-            <p th:text="${error}">Error message here</p>
-            <a href="/" class="btn btn-primary mt-3">Return to Home Page</a>
+        <div class="col-md-6 text-center vintage-error-container">
+            <div class="record-decoration mb-4">
+                <div class="record-circle"></div>
+            </div>
+            <h1 class="vintage-title mb-4">Oops! An Error Occurred</h1>
+            <p class="vintage-text" th:text="${error}">Error message here</p>
+            <a href="/" class="btn btn-primary vintage-btn mt-3">Return to Home Page</a>
         </div>
     </div>
 </div>
+
+<style>
+    :root {
+        --vintage-primary: #2c1810;
+        --vintage-secondary: #d4af37;
+        --vintage-background: #f5e6d3;
+        --vintage-card: #fff9f0;
+        --vintage-text: #2c1810;
+        --vintage-accent: #8b4513;
+        --vintage-border: #d4af37;
+    }
+
+    body {
+        font-family: 'Old Standard TT', serif !important;
+        background-color: var(--vintage-background) !important;
+        color: var(--vintage-text) !important;
+        background-image:
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"),
+                repeating-linear-gradient(45deg, #f5e6d3 0px, #f5e6d3 2px, #f0dcc3 2px, #f0dcc3 4px) !important;
+    }
+
+    .vintage-error-container {
+        background: var(--vintage-card) !important;
+        padding: 3rem !important;
+        border: 2px solid var(--vintage-border) !important;
+        position: relative !important;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+        margin-bottom: 2rem !important;
+    }
+
+    .vintage-error-container::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        border: 1px solid var(--vintage-border);
+        pointer-events: none;
+    }
+
+    .record-decoration {
+        position: relative;
+        margin: 0 auto 2rem;
+        width: 100px;
+        height: 100px;
+    }
+
+    .record-circle {
+        width: 100px;
+        height: 100px;
+        background: var(--vintage-primary);
+        border-radius: 50%;
+        border: 2px solid var(--vintage-border);
+        position: relative;
+        animation: spin 10s linear infinite;
+    }
+
+    .record-circle::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        background: var(--vintage-border);
+        border-radius: 50%;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .vintage-title {
+        font-family: 'Playfair Display', serif !important;
+        color: var(--vintage-primary) !important;
+        font-size: 2.5rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 3px !important;
+        text-shadow: 2px 2px 0px rgba(212, 175, 55, 0.2) !important;
+    }
+
+    .vintage-text {
+        font-family: 'Old Standard TT', serif !important;
+        color: var(--vintage-text) !important;
+        font-size: 1.2rem !important;
+        font-style: italic !important;
+        margin: 1.5rem 0 !important;
+        line-height: 1.6 !important;
+    }
+
+    .vintage-btn {
+        background-color: var(--vintage-primary) !important;
+        border-color: var(--vintage-border) !important;
+        color: var(--vintage-card) !important;
+        font-family: 'Old Standard TT', serif !important;
+        letter-spacing: 2px !important;
+        text-transform: uppercase !important;
+        padding: 0.75rem 1.5rem !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 3px 3px 0 var(--vintage-border) !important;
+    }
+
+    .vintage-btn:hover {
+        background-color: var(--vintage-accent) !important;
+        transform: translate(2px, 2px) !important;
+        box-shadow: 1px 1px 0 var(--vintage-border) !important;
+    }
+</style>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>

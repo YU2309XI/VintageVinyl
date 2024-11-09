@@ -4,9 +4,11 @@ import com.vintagevinyl.model.Record;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -51,6 +53,8 @@ public interface RecordRepository extends JpaRepository<Record, Long> {
     /**
      * Update stock quantity for a specific record
      */
+    @Modifying
+    @Transactional
     @Query("UPDATE Record r SET r.stock = :stock WHERE r.id = :id")
     void updateStock(@Param("id") Long id, @Param("stock") int stock);
 }
