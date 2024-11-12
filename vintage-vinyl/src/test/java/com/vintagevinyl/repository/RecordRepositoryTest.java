@@ -39,12 +39,11 @@ public class RecordRepositoryTest {
                 "Test Album",
                 "Test Artist",
                 BigDecimal.valueOf(29.99),
-                10,
-                5
+                10
         );
     }
 
-    private Record createTestRecord(String title, String artist, BigDecimal price, int stock, int lowStockThreshold) {
+    private Record createTestRecord(String title, String artist, BigDecimal price, int stock) {
         Record record = new Record();
         record.setTitle(title);
         record.setArtist(artist);
@@ -53,7 +52,7 @@ public class RecordRepositoryTest {
         record.setGenre("Rock");
         record.setPrice(price);
         record.setStock(stock);
-        record.setLowStockThreshold(lowStockThreshold);
+        record.setLowStockThreshold(5);
         return record;
     }
 
@@ -79,9 +78,9 @@ public class RecordRepositoryTest {
     void shouldFindByTitleOrArtistContaining() {
         // Arrange
         recordRepository.saveAll(List.of(
-                createTestRecord("Abbey Road", "The Beatles", BigDecimal.valueOf(29.99), 10, 5),
-                createTestRecord("Let It Be", "The Beatles", BigDecimal.valueOf(27.99), 15, 5),
-                createTestRecord("Thriller", "Michael Jackson", BigDecimal.valueOf(34.99), 20, 5)
+                createTestRecord("Abbey Road", "The Beatles", BigDecimal.valueOf(29.99), 10),
+                createTestRecord("Let It Be", "The Beatles", BigDecimal.valueOf(27.99), 15),
+                createTestRecord("Thriller", "Michael Jackson", BigDecimal.valueOf(34.99), 20)
         ));
 
         // Act
@@ -103,9 +102,9 @@ public class RecordRepositoryTest {
     void shouldFindLowStockRecords() {
         // Arrange
         recordRepository.saveAll(List.of(
-                createTestRecord("Record 1", "Artist 1", BigDecimal.valueOf(29.99), 3, 5),
-                createTestRecord("Record 2", "Artist 2", BigDecimal.valueOf(29.99), 0, 5),
-                createTestRecord("Record 3", "Artist 3", BigDecimal.valueOf(29.99), 10, 5)
+                createTestRecord("Record 1", "Artist 1", BigDecimal.valueOf(29.99), 3),
+                createTestRecord("Record 2", "Artist 2", BigDecimal.valueOf(29.99), 0),
+                createTestRecord("Record 3", "Artist 3", BigDecimal.valueOf(29.99), 10)
         ));
 
         // Act
@@ -123,9 +122,9 @@ public class RecordRepositoryTest {
     void shouldFindByStockThreshold() {
         // Arrange
         recordRepository.saveAll(List.of(
-                createTestRecord("Record 1", "Artist 1", BigDecimal.valueOf(29.99), 2, 5),
-                createTestRecord("Record 2", "Artist 2", BigDecimal.valueOf(29.99), 4, 5),
-                createTestRecord("Record 3", "Artist 3", BigDecimal.valueOf(29.99), 6, 5)
+                createTestRecord("Record 1", "Artist 1", BigDecimal.valueOf(29.99), 2),
+                createTestRecord("Record 2", "Artist 2", BigDecimal.valueOf(29.99), 4),
+                createTestRecord("Record 3", "Artist 3", BigDecimal.valueOf(29.99), 6)
         ));
 
         // Act
@@ -143,8 +142,8 @@ public class RecordRepositoryTest {
     void shouldFindOutOfStockRecords() {
         // Arrange
         recordRepository.saveAll(List.of(
-                createTestRecord("Record 1", "Artist 1", BigDecimal.valueOf(29.99), 0, 5),
-                createTestRecord("Record 2", "Artist 2", BigDecimal.valueOf(29.99), 1, 5)
+                createTestRecord("Record 1", "Artist 1", BigDecimal.valueOf(29.99), 0),
+                createTestRecord("Record 2", "Artist 2", BigDecimal.valueOf(29.99), 1)
         ));
 
         // Act
@@ -180,9 +179,9 @@ public class RecordRepositoryTest {
     void shouldCountLowStockRecords() {
         // Arrange
         recordRepository.saveAll(List.of(
-                createTestRecord("Record 1", "Artist 1", BigDecimal.valueOf(29.99), 3, 5),
-                createTestRecord("Record 2", "Artist 2", BigDecimal.valueOf(29.99), 4, 5),
-                createTestRecord("Record 3", "Artist 3", BigDecimal.valueOf(29.99), 6, 5)
+                createTestRecord("Record 1", "Artist 1", BigDecimal.valueOf(29.99), 3),
+                createTestRecord("Record 2", "Artist 2", BigDecimal.valueOf(29.99), 4),
+                createTestRecord("Record 3", "Artist 3", BigDecimal.valueOf(29.99), 6)
         ));
 
         // Act
@@ -197,9 +196,9 @@ public class RecordRepositoryTest {
     void shouldFindRecordsNeedingRestock() {
         // Arrange
         recordRepository.saveAll(List.of(
-                createTestRecord("Record 1", "Artist 1", BigDecimal.valueOf(29.99), 3, 5),
-                createTestRecord("Record 2", "Artist 2", BigDecimal.valueOf(29.99), 1, 5),
-                createTestRecord("Record 3", "Artist 3", BigDecimal.valueOf(29.99), 6, 5)
+                createTestRecord("Record 1", "Artist 1", BigDecimal.valueOf(29.99), 3),
+                createTestRecord("Record 2", "Artist 2", BigDecimal.valueOf(29.99), 1),
+                createTestRecord("Record 3", "Artist 3", BigDecimal.valueOf(29.99), 6)
         ));
 
         // Act
@@ -217,10 +216,10 @@ public class RecordRepositoryTest {
     void shouldFindRecordsByStockRange() {
         // Arrange
         recordRepository.saveAll(List.of(
-                createTestRecord("Record 1", "Artist 1", BigDecimal.valueOf(29.99), 3, 5),
-                createTestRecord("Record 2", "Artist 2", BigDecimal.valueOf(29.99), 5, 5),
-                createTestRecord("Record 3", "Artist 3", BigDecimal.valueOf(29.99), 7, 5),
-                createTestRecord("Record 4", "Artist 4", BigDecimal.valueOf(29.99), 10, 5)
+                createTestRecord("Record 1", "Artist 1", BigDecimal.valueOf(29.99), 3),
+                createTestRecord("Record 2", "Artist 2", BigDecimal.valueOf(29.99), 5),
+                createTestRecord("Record 3", "Artist 3", BigDecimal.valueOf(29.99), 7),
+                createTestRecord("Record 4", "Artist 4", BigDecimal.valueOf(29.99), 10)
         ));
 
         // Act
@@ -243,8 +242,7 @@ public class RecordRepositoryTest {
                     "Record " + i,
                     "Artist " + i,
                     BigDecimal.valueOf(29.99),
-                    10,
-                    5
+                    10
             ));
         }
         recordRepository.saveAll(records);
@@ -276,15 +274,13 @@ public class RecordRepositoryTest {
                 "Max Stock",
                 "Artist",
                 BigDecimal.valueOf(29.99),
-                Integer.MAX_VALUE,
-                5
+                Integer.MAX_VALUE
         );
         Record zeroStockRecord = createTestRecord(
                 "Zero Stock",
                 "Artist",
                 BigDecimal.valueOf(29.99),
-                0,
-                5
+                0
         );
         recordRepository.saveAll(List.of(maxStockRecord, zeroStockRecord));
 

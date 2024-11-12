@@ -29,19 +29,18 @@ public class UserRepositoryTest {
         testUser = createTestUser(
                 "testuser",
                 "test@example.com",
-                "password",
                 true,
                 true
         );
         testUser.addRole("USER");
     }
 
-    private User createTestUser(String username, String email, String password,
+    private User createTestUser(String username, String email,
                                 boolean enabled, boolean accountNonLocked) {
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
-        user.setPassword(password);
+        user.setPassword("password");
         user.setEnabled(enabled);
         user.setAccountNonLocked(accountNonLocked);
         user.setCreatedAt(LocalDateTime.now());
@@ -105,9 +104,9 @@ public class UserRepositoryTest {
     void shouldFindByEnabled() {
         // Arrange
         User enabledUser = createTestUser("enabled", "enabled@test.com",
-                "password", true, true);
+                true, true);
         User disabledUser = createTestUser("disabled", "disabled@test.com",
-                "password", false, true);
+                false, true);
         userRepository.saveAll(List.of(enabledUser, disabledUser));
 
         // Act
@@ -128,9 +127,9 @@ public class UserRepositoryTest {
     void shouldFindByAccountNonLocked() {
         // Arrange
         User unlockedUser = createTestUser("unlocked", "unlocked@test.com",
-                "password", true, true);
+                true, true);
         User lockedUser = createTestUser("locked", "locked@test.com",
-                "password", true, false);
+                true, false);
         userRepository.saveAll(List.of(unlockedUser, lockedUser));
 
         // Act
@@ -151,10 +150,10 @@ public class UserRepositoryTest {
     void shouldFindByRole() {
         // Arrange
         User userRole = createTestUser("user1", "user1@test.com",
-                "password", true, true);
+                true, true);
         userRole.addRole("USER");
         User adminRole = createTestUser("admin1", "admin1@test.com",
-                "password", true, true);
+                true, true);
         adminRole.addRole("ADMIN");
         userRepository.saveAll(List.of(userRole, adminRole));
 
@@ -176,9 +175,9 @@ public class UserRepositoryTest {
     void shouldFindByEnabledAndAccountNonLocked() {
         // Arrange
         User activeUser = createTestUser("active", "active@test.com",
-                "password", true, true);
+                true, true);
         User inactiveUser = createTestUser("inactive", "inactive@test.com",
-                "password", false, false);
+                false, false);
         userRepository.saveAll(List.of(activeUser, inactiveUser));
 
         // Act
@@ -199,10 +198,10 @@ public class UserRepositoryTest {
     void shouldCountByRoleAndEnabled() {
         // Arrange
         User enabledUser = createTestUser("enabled", "enabled@test.com",
-                "password", true, true);
+                true, true);
         enabledUser.addRole("USER");
         User disabledUser = createTestUser("disabled", "disabled@test.com",
-                "password", false, true);
+                false, true);
         disabledUser.addRole("USER");
         userRepository.saveAll(List.of(enabledUser, disabledUser));
 

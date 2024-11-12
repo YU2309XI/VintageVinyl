@@ -170,7 +170,7 @@ public class ShoppingCartRepositoryTest {
     @DisplayName("Should calculate correct subtotal for cart item")
     void shouldCalculateCorrectSubtotal() {
         // Arrange
-        CartItem item = testCart.getItems().get(0);
+        CartItem item = testCart.getItems().getFirst();
         item.setQuantity(3);
 
         // Act

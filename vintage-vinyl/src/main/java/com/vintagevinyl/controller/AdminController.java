@@ -203,7 +203,7 @@ public class AdminController {
     }
 
     /**
-     * Get low stock records
+     * Get low-stock records
      */
     @GetMapping("/api/records/low-stock")
     @ResponseBody
@@ -248,7 +248,7 @@ public class AdminController {
     }
 
     /**
-     * Update low stock threshold for a record
+     * Update a low stock threshold for a record
      */
     @PutMapping("/api/records/{id}/threshold")
     @ResponseBody

@@ -1,5 +1,6 @@
 package com.vintagevinyl.controller;
 
+import com.vintagevinyl.exception.RecordNotFoundException;
 import com.vintagevinyl.model.Record;
 import com.vintagevinyl.service.RecordService;
 import com.vintagevinyl.service.UserService;
@@ -120,7 +121,7 @@ public class RecordController {
         Record existingRecord = recordService.getRecordById(id);
         record.setId(id);
         record.setStock(existingRecord.getStock()); // Keep original stock
-        record.setLowStockThreshold(existingRecord.getLowStockThreshold()); // Keep original threshold
+        record.setLowStockThreshold(existingRecord.getLowStockThreshold()); // Keep an original threshold
         record.setReleaseDate(LocalDate.of(releaseYear, 1, 1));
 
         recordService.updateRecord(record);
@@ -196,8 +197,4 @@ public class RecordController {
     }
 }
 
-class RecordNotFoundException extends RuntimeException {
-    public RecordNotFoundException(String message) {
-        super(message);
-    }
-}
+

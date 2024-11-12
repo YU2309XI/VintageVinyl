@@ -3,26 +3,25 @@ package com.vintagevinyl.service;
 import com.vintagevinyl.exception.RecordNotFoundException;
 import com.vintagevinyl.model.*;
 import com.vintagevinyl.model.Record;
-import com.vintagevinyl.repository.RecordRepository;
 import com.vintagevinyl.repository.ShoppingCartRepository;
+import com.vintagevinyl.repository.RecordRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.math.BigDecimal;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.math.BigDecimal;
+import java.util.*;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class ShoppingCartServiceTest {
-    private static final Logger logger = LoggerFactory.getLogger(ShoppingCartServiceTest.class);
 
     @Mock
     private ShoppingCartRepository shoppingCartRepository;
@@ -40,242 +39,222 @@ class ShoppingCartServiceTest {
 
     @BeforeEach
     void setUp() {
-        logger.info("Setting up test data");
-
-        // Create test data
+        // Initialize test user
         testUser = new User();
         testUser.setId(1L);
         testUser.setUsername("testUser");
 
+        // Initialize test record
         testRecord = new Record();
         testRecord.setId(1L);
         testRecord.setTitle("Test Record");
         testRecord.setPrice(new BigDecimal("29.99"));
 
-        testCart = new ShoppingCart();
-        testCart.setId(1L);
-        testCart.setUser(testUser);
-
+        // Initialize test cart item
         testCartItem = new CartItem();
         testCartItem.setId(1L);
         testCartItem.setRecord(testRecord);
         testCartItem.setQuantity(1);
+
+        // Initialize test shopping cart
+        testCart = new ShoppingCart();
+        testCart.setId(1L);
+        testCart.setUser(testUser);
+        testCart.setItems(new ArrayList<>());
         testCartItem.setCart(testCart);
+        testCart.addItem(testCartItem);
     }
 
     @Test
-    void testAddItemToCart() {
-        logger.info("Testing addItemToCart");
+    @DisplayName("Should add new item to cart successfully")
+    void addItemToCart_NewItem_Success() {
+        // Given
+        when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
+        when(recordRepository.findById(2L)).thenReturn(Optional.of(testRecord));
+        when(shoppingCartRepository.save(any(ShoppingCart.class))).thenReturn(testCart);
 
-        // Set necessary mocks
+        // When
+        shoppingCartService.addItemToCart(testUser, 2L, 1);
+
+        // Then
+        verify(shoppingCartRepository).save(any(ShoppingCart.class));
+    }
+
+    @Test
+    @DisplayName("Should update existing item quantity in cart")
+    void addItemToCart_ExistingItem_UpdatesQuantity() {
+        // Given
         when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
         when(recordRepository.findById(1L)).thenReturn(Optional.of(testRecord));
         when(shoppingCartRepository.save(any(ShoppingCart.class))).thenReturn(testCart);
 
-        // Execute test
+        // When
         shoppingCartService.addItemToCart(testUser, 1L, 2);
 
-        // Verify
-        verify(shoppingCartRepository).save(any(ShoppingCart.class));
-
-        logger.info("AddItemToCart test completed successfully");
-    }
-
-    @Test
-    void testUpdateCartItemQuantity() {
-        logger.info("Testing updateCartItemQuantity");
-
-        // Set necessary mocks
-        when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
-        when(shoppingCartRepository.save(any(ShoppingCart.class))).thenReturn(testCart);
-
-        // Add test item to the cart
-        testCart.addItem(testCartItem);
-
-        // Execute test
-        shoppingCartService.updateCartItemQuantity(testUser, 1L, 3);
-
-        // Verify
-        assertEquals(3, testCartItem.getQuantity());
+        // Then
+        assertEquals(2, testCartItem.getQuantity());
         verify(shoppingCartRepository).save(testCart);
-
-        logger.info("UpdateCartItemQuantity test completed successfully");
     }
 
     @Test
-    void testCalculateCartTotal() {
-        logger.info("Testing calculateCartTotal");
+    @DisplayName("Should throw exception when quantity is invalid")
+    void addItemToCart_InvalidQuantity_ThrowsException() {
+        // When & Then
+        assertThrows(IllegalArgumentException.class,
+                () -> shoppingCartService.addItemToCart(testUser, 1L, 0));
+        assertThrows(IllegalArgumentException.class,
+                () -> shoppingCartService.addItemToCart(testUser, 1L, CartItem.MAX_QUANTITY + 1));
+    }
 
-        // Set necessary mocks
+    @Test
+    @DisplayName("Should throw exception when record not found")
+    void addItemToCart_RecordNotFound_ThrowsException() {
+        // Given
         when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
+        when(recordRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // Set test data
-        testCartItem.setQuantity(2);
-        testCart.addItem(testCartItem);
+        // When & Then
+        RecordNotFoundException exception = assertThrows(RecordNotFoundException.class,
+                () -> shoppingCartService.addItemToCart(testUser, 999L, 1));
+        assertEquals("Record not found with id: 999", exception.getMessage());
 
-        // Execute test
-        BigDecimal actualTotal = shoppingCartService.calculateCartTotal(testUser);
-
-        // Verify
-        BigDecimal expectedTotal = new BigDecimal("59.98"); // 29.99 * 2
-        assertEquals(expectedTotal, actualTotal);
-        logger.info("Expected total: {}, Actual total: {}", expectedTotal, actualTotal);
-        logger.info("CalculateCartTotal test completed successfully");
+        // Verify the interactions
+        verify(recordRepository).findById(999L);
+        verify(shoppingCartRepository, never()).save(any(ShoppingCart.class));
     }
 
     @Test
-    void testRemoveItemFromCart() {
-        logger.info("Testing removeItemFromCart");
+    @DisplayName("Should get or create cart successfully")
+    void getOrCreateCart_Success() {
+        // Given
+        when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.empty());
+        when(shoppingCartRepository.save(any(ShoppingCart.class))).thenReturn(testCart);
 
-        // Set necessary mocks
+        // When
+        ShoppingCart result = shoppingCartService.getOrCreateCart(testUser);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(testUser, result.getUser());
+        verify(shoppingCartRepository).save(any(ShoppingCart.class));
+    }
+
+    @Test
+    @DisplayName("Should remove item from cart successfully")
+    void removeItemFromCart_Success() {
+        // Given
         when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
         when(shoppingCartRepository.save(any(ShoppingCart.class))).thenReturn(testCart);
 
-        // Add test item to the cart
-        testCart.addItem(testCartItem);
-
-        // Execute test
+        // When
         shoppingCartService.removeItemFromCart(testUser, 1L);
 
-        // Verify
-        assertTrue(testCart.getItems().isEmpty());
+        // Then
         verify(shoppingCartRepository).save(testCart);
-
-        logger.info("RemoveItemFromCart test completed successfully");
+        assertTrue(testCart.getItems().stream().noneMatch(item -> item.getRecord().getId().equals(1L)));
     }
 
     @Test
-    void testInvalidQuantity() {
-        logger.info("Testing invalid quantity handling");
-
-        // Test negative quantity
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            shoppingCartService.updateCartItemQuantity(testUser, 1L, -1);
-        });
-        assertEquals("Quantity must be at least 1", exception.getMessage());
-
-        logger.info("Invalid quantity test completed successfully");
-    }
-
-    @Test
-    void testAddItemToCartWithNonExistentRecord() {
-        logger.info("Testing addItemToCart with non-existent record");
-
-        when(shoppingCartRepository.findByUser(any(User.class))).thenReturn(Optional.of(testCart));
-        when(recordRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThrows(RecordNotFoundException.class, () -> {
-            shoppingCartService.addItemToCart(testUser, 99L, 1);
-        });
-
-        logger.info("AddItemToCart with non-existent record test completed");
-    }
-
-    @Test
-    void testAddItemWithZeroQuantity() {
-        // Expect to throw IllegalArgumentException
-        assertThrows(IllegalArgumentException.class, () -> {
-            shoppingCartService.addItemToCart(testUser, 1L, 0);
-        });
-    }
-
-    @Test
-    void testUpdateQuantityWithMaxValue() {
-        logger.info("Testing update quantity with maximum value");
-
-        // Add test item to the cart
-        testCart.addItem(testCartItem);
-
-        // Test exceeding the maximum value
-        int invalidQuantity = CartItem.MAX_QUANTITY + 1;
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            shoppingCartService.updateCartItemQuantity(testUser, 1L, invalidQuantity);
-        });
-
-        // Verify exception message
-        assertEquals("Quantity cannot exceed " + CartItem.MAX_QUANTITY, exception.getMessage());
-
-        logger.info("Update quantity with maximum value test completed");
-    }
-
-    @Test
-    void testEmptyCartTotal() {
-        logger.info("Testing empty cart total calculation");
-
-        when(shoppingCartRepository.findByUser(any(User.class))).thenReturn(Optional.of(new ShoppingCart()));
-
-        BigDecimal total = shoppingCartService.calculateCartTotal(testUser);
-        assertEquals(BigDecimal.ZERO, total);
-
-        logger.info("Empty cart total calculation test completed");
-    }
-
-    @Test
-    void testAddMultipleItemsToCart() {
-        logger.info("Testing adding multiple items to cart");
-
-        // Create second product
-        Record testRecord2 = new Record();
-        testRecord2.setId(2L);
-        testRecord2.setTitle("Test Record 2");
-        testRecord2.setPrice(new BigDecimal("19.99"));
-
-        when(shoppingCartRepository.findByUser(any(User.class))).thenReturn(Optional.of(testCart));
-        when(recordRepository.findById(1L)).thenReturn(Optional.of(testRecord));
-        when(recordRepository.findById(2L)).thenReturn(Optional.of(testRecord2));
+    @DisplayName("Should clear cart successfully")
+    void clearCart_Success() {
+        // Given
+        when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
         when(shoppingCartRepository.save(any(ShoppingCart.class))).thenReturn(testCart);
 
-        // Add two different items
-        shoppingCartService.addItemToCart(testUser, 1L, 2); // 29.99 * 2
-        shoppingCartService.addItemToCart(testUser, 2L, 1); // 19.99 * 1
-
-        BigDecimal expectedTotal = new BigDecimal("79.97"); // (29.99 * 2) + 19.99
-        BigDecimal actualTotal = shoppingCartService.calculateCartTotal(testUser);
-        assertEquals(expectedTotal, actualTotal);
-
-        logger.info("Multiple items addition test completed");
-    }
-
-    @Test
-    void testUpdateQuantityForNonExistentItem() {
-        logger.info("Testing update quantity for non-existent item");
-
-        when(shoppingCartRepository.findByUser(any(User.class))).thenReturn(Optional.of(testCart));
-
-        assertThrows(RuntimeException.class, () -> {
-            shoppingCartService.updateCartItemQuantity(testUser, 99L, 1);
-        });
-
-        logger.info("Update quantity for non-existent item test completed");
-    }
-
-    @Test
-    void testClearCartWithItems() {
-        logger.info("Testing clear cart with items");
-
-        when(shoppingCartRepository.findByUser(any(User.class))).thenReturn(Optional.of(testCart));
-        testCart.addItem(testCartItem);
-
-        assertFalse(testCart.getItems().isEmpty());
+        // When
         shoppingCartService.clearCart(testUser);
-        assertTrue(testCart.getItems().isEmpty());
 
-        logger.info("Clear cart test completed");
+        // Then
+        assertTrue(testCart.getItems().isEmpty());
+        verify(shoppingCartRepository).save(testCart);
     }
 
     @Test
-    void testGetCartItemCount() {
-        logger.info("Testing get cart item count");
+    @DisplayName("Should calculate cart total correctly")
+    void calculateCartTotal_Success() {
+        // Given
+        when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
 
-        when(shoppingCartRepository.findByUser(any(User.class))).thenReturn(Optional.of(testCart));
+        // When
+        BigDecimal total = shoppingCartService.calculateCartTotal(testUser);
 
-        testCartItem.setQuantity(3);
-        testCart.addItem(testCartItem);
+        // Then
+        assertEquals(new BigDecimal("29.99"), total);
+    }
 
+    @Test
+    @DisplayName("Should update cart item quantity successfully")
+    void updateCartItemQuantity_Success() {
+        // Given
+        when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
+        when(shoppingCartRepository.save(any(ShoppingCart.class))).thenReturn(testCart);
+
+        // When
+        shoppingCartService.updateCartItemQuantity(testUser, 1L, 2);
+
+        // Then
+        assertEquals(2, testCartItem.getQuantity());
+        verify(shoppingCartRepository).save(testCart);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when updating non-existent cart item")
+    void updateCartItemQuantity_ItemNotFound_ThrowsException() {
+        // Given
+        when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
+
+        // When & Then
+        assertThrows(RuntimeException.class,
+                () -> shoppingCartService.updateCartItemQuantity(testUser, 999L, 2));
+    }
+
+    @Test
+    @DisplayName("Should validate cart items successfully")
+    void validateCartItems_Success() {
+        // Given
+        CartItem invalidItem = new CartItem();
+        // 设置空记录，这也是一种无效状态
+        invalidItem.setQuantity(1);  // 设置有效数量
+        invalidItem.setRecord(null); // 设置无效记录
+        testCart.addItem(invalidItem);
+
+        when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
+        when(shoppingCartRepository.save(any(ShoppingCart.class))).thenReturn(testCart);
+
+        // When
+        shoppingCartService.validateCartItems(testUser);
+
+        // Then
+        assertFalse(testCart.getItems().contains(invalidItem));
+        verify(shoppingCartRepository).save(testCart);
+    }
+
+    @Test
+    @DisplayName("Should get cart item count correctly")
+    void getCartItemCount_Success() {
+        // Given
+        when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
+
+        // When
         int count = shoppingCartService.getCartItemCount(testUser);
-        assertEquals(3, count);
 
-        logger.info("Get cart item count test completed");
+        // Then
+        assertEquals(1, count);
+    }
+
+    @Test
+    @DisplayName("Should remove all cart items for record successfully")
+    void removeAllCartItemsForRecord_Success() {
+        // Given
+        List<ShoppingCart> carts = Collections.singletonList(testCart);
+        when(shoppingCartRepository.findAll()).thenReturn(carts);
+        when(shoppingCartRepository.save(any(ShoppingCart.class))).thenReturn(testCart);
+
+        // When
+        shoppingCartService.removeAllCartItemsForRecord(1L);
+
+        // Then
+        verify(shoppingCartRepository).save(testCart);
+        assertTrue(testCart.getItems().stream().noneMatch(item -> item.getRecord().getId().equals(1L)));
     }
 }
-

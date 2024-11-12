@@ -28,7 +28,6 @@ public class WishlistRepositoryTest {
 
     private User testUser;
     private Wishlist testWishlist;
-    private WishlistItem testItem;
 
     @BeforeEach
     void setUp() {
@@ -45,7 +44,7 @@ public class WishlistRepositoryTest {
         entityManager.persist(testUser);
 
         // Create test wishlist item
-        testItem = new WishlistItem();
+        WishlistItem testItem = new WishlistItem();
         testItem.setTitle("Test Album");
         testItem.setArtist("Test Artist");
         testItem.setRecordId(1L);
@@ -71,7 +70,7 @@ public class WishlistRepositoryTest {
                 .hasValueSatisfying(wishlist -> {
                     assertThat(wishlist.getUser()).isEqualTo(testUser);
                     assertThat(wishlist.getItems()).hasSize(1);
-                    assertThat(wishlist.getItems().get(0).getTitle())
+                    assertThat(wishlist.getItems().getFirst().getTitle())
                             .isEqualTo("Test Album");
                 });
     }

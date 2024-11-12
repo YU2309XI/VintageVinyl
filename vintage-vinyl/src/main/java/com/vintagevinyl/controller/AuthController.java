@@ -1,6 +1,5 @@
 package com.vintagevinyl.controller;
 
-import com.vintagevinyl.exception.OrderNotFoundException;
 import com.vintagevinyl.model.User;
 import com.vintagevinyl.model.Wishlist;
 import com.vintagevinyl.service.RecordService;
@@ -10,7 +9,6 @@ import com.vintagevinyl.model.Order;
 import com.vintagevinyl.service.OrderService;
 import com.vintagevinyl.service.WishlistService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -42,9 +40,6 @@ public class AuthController {
 
     @Autowired
     private OrderService orderService;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     @GetMapping("/")
     public String home() {

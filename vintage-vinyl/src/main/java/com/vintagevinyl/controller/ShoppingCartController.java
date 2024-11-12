@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
@@ -33,9 +31,6 @@ public class ShoppingCartController {
     @Autowired
     private ShoppingCartService shoppingCartService;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     @Transactional
     @GetMapping
     public String viewCart(@AuthenticationPrincipal UserDetails userDetails, Model model) {
@@ -50,9 +45,7 @@ public class ShoppingCartController {
         }
 
         ShoppingCart cart = shoppingCartService.getCart(user);
-        cart.getItems().forEach(item -> {
-            item.getRecord().getTitle();
-        });
+        cart.getItems().forEach(item -> item.getRecord().getTitle());
 
         model.addAttribute("cart", cart);
         return "cart";

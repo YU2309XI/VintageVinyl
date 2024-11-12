@@ -32,8 +32,6 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    @Autowired
-    private HttpServletRequest request;
     @GetMapping("/checkout")
     @Transactional
     public String showCheckoutForm(@AuthenticationPrincipal UserDetails userDetails, Model model) {

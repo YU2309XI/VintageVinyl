@@ -202,7 +202,7 @@ public class OrderRepositoryTest {
                 .isPresent()
                 .hasValueSatisfying(order -> {
                     assertThat(order.getItems()).hasSize(1);
-                    OrderItem item = order.getItems().get(0);
+                    OrderItem item = order.getItems().getFirst();
                     assertThat(item.getRecord()).isEqualTo(testRecord);
                     assertThat(item.getQuantity()).isEqualTo(1);
                 });
