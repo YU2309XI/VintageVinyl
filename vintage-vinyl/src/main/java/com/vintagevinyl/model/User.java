@@ -41,10 +41,10 @@ public class User implements UserDetails {
     private String password;
 
     @Column(nullable = false)
-    private boolean enabled = true; // 默认激活
+    private boolean enabled = true;
 
     @Column(nullable = false)
-    private boolean accountNonLocked = true; // 默认未锁定
+    private boolean accountNonLocked = true;
 
     @Column(name = "last_modified_by")
     private String lastModifiedBy;

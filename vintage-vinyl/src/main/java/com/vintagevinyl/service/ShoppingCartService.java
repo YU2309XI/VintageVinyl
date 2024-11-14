@@ -40,8 +40,13 @@ public class ShoppingCartService {
 
         try {
             ShoppingCart cart = getOrCreateCart(user);
-            Record record = recordRepository.findById(recordId)
+            com.vintagevinyl.model.Record record = recordRepository.findById(recordId)
                     .orElseThrow(() -> new RecordNotFoundException("Record not found with id: " + recordId));
+
+            // Add stock check here
+            if (record.getStock() < quantity) {
+                throw new IllegalStateException("Insufficient stock for record: " + record.getTitle());
+            }
 
             Optional<CartItem> existingItem = cart.getItems().stream()
                     .filter(item -> item.getRecord().getId().equals(recordId))
@@ -85,8 +90,8 @@ public class ShoppingCartService {
                     return shoppingCartRepository.save(newCart);
                 });
 
+        // Force collection initialization
         cart.getItems().size();
-
         return cart;
     }
 
@@ -100,8 +105,11 @@ public class ShoppingCartService {
     @Transactional
     public void clearCart(User user) {
         ShoppingCart cart = getOrCreateCart(user);
-        cart.getItems().clear();
+        // Use removeIf instead of clear() to ensure proper cascade delete
+        cart.getItems().removeIf(item -> true);
         shoppingCartRepository.save(cart);
+        // Force session flush
+        shoppingCartRepository.flush();
     }
 
     @Transactional(readOnly = true)

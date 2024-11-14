@@ -44,11 +44,12 @@ class ShoppingCartServiceTest {
         testUser.setId(1L);
         testUser.setUsername("testUser");
 
-        // Initialize test record
+        // Initialize test record with sufficient stock
         testRecord = new Record();
         testRecord.setId(1L);
         testRecord.setTitle("Test Record");
         testRecord.setPrice(new BigDecimal("29.99"));
+        testRecord.setStock(10); // Adding sufficient stock for tests
 
         // Initialize test cart item
         testCartItem = new CartItem();
@@ -69,8 +70,14 @@ class ShoppingCartServiceTest {
     @DisplayName("Should add new item to cart successfully")
     void addItemToCart_NewItem_Success() {
         // Given
+        Record newRecord = new Record();
+        newRecord.setId(2L);
+        newRecord.setTitle("Test Record 2");
+        newRecord.setPrice(new BigDecimal("19.99"));
+        newRecord.setStock(5); // Ensure sufficient stock for test
+
         when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
-        when(recordRepository.findById(2L)).thenReturn(Optional.of(testRecord));
+        when(recordRepository.findById(2L)).thenReturn(Optional.of(newRecord));
         when(shoppingCartRepository.save(any(ShoppingCart.class))).thenReturn(testCart);
 
         // When
@@ -88,12 +95,25 @@ class ShoppingCartServiceTest {
         when(recordRepository.findById(1L)).thenReturn(Optional.of(testRecord));
         when(shoppingCartRepository.save(any(ShoppingCart.class))).thenReturn(testCart);
 
-        // When
+        // When - updating quantity to 2 (within available stock of 10)
         shoppingCartService.addItemToCart(testUser, 1L, 2);
 
         // Then
         assertEquals(2, testCartItem.getQuantity());
         verify(shoppingCartRepository).save(testCart);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when insufficient stock")
+    void addItemToCart_InsufficientStock_ThrowsException() {
+        // Given
+        when(shoppingCartRepository.findByUser(testUser)).thenReturn(Optional.of(testCart));
+        when(recordRepository.findById(1L)).thenReturn(Optional.of(testRecord));
+
+        // When & Then - trying to add more items than available stock
+        assertThrows(IllegalStateException.class,
+                () -> shoppingCartService.addItemToCart(testUser, 1L, 11));
+        verify(shoppingCartRepository, never()).save(any(ShoppingCart.class));
     }
 
     @Test

@@ -7,6 +7,7 @@ import com.vintagevinyl.model.OrderItem;
 import com.vintagevinyl.model.ShoppingCart;
 import com.vintagevinyl.model.User;
 import com.vintagevinyl.repository.OrderRepository;
+import com.vintagevinyl.repository.ShoppingCartRepository;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -30,10 +31,20 @@ public class OrderService {
     @Autowired
     private ShoppingCartService shoppingCartService;
 
+    @Autowired
+    private ShoppingCartRepository shoppingCartRepository;
+
     @Transactional
     public Long createOrder(User user, ShoppingCart cart, String shippingAddress, String paymentMethod) {
         System.out.println("Creating order for user: " + user.getUsername());
+        // Get fresh cart data
         cart = shoppingCartService.getCart(user);
+
+        // Verify cart is not empty
+        if (cart.getItems().isEmpty()) {
+            throw new IllegalStateException("Cannot create order with empty cart");
+        }
+
         Order order = new Order();
         order.setUser(user);
         order.setOrderDate(new Date());
@@ -44,18 +55,37 @@ public class OrderService {
 
         List<OrderItem> orderItems = new ArrayList<>();
         for (CartItem cartItem : cart.getItems()) {
+            com.vintagevinyl.model.Record vinyl = cartItem.getRecord();
+            // Check stock availability
+            if (vinyl.getStock() < cartItem.getQuantity()) {
+                throw new IllegalStateException("Insufficient stock for record: " + vinyl.getTitle());
+            }
+
+            // Reduce stock
+            vinyl.setStock(vinyl.getStock() - cartItem.getQuantity());
+
+            // Create order item from cart item
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
-            orderItem.setRecord(cartItem.getRecord());
+            orderItem.setRecord(vinyl);
             orderItem.setQuantity(cartItem.getQuantity());
-            orderItem.setPrice(cartItem.getRecord().getPrice());
+            orderItem.setPrice(vinyl.getPrice());
             orderItems.add(orderItem);
         }
         order.setItems(orderItems);
 
+        // Save the order
         System.out.println("Saving order...");
         order = orderRepository.save(order);
         System.out.println("Order saved successfully. Order ID: " + order.getId());
+
+        // Clear the cart after successful order creation
+        shoppingCartService.clearCart(user);
+
+        // Ensure all changes are committed
+        shoppingCartRepository.flush();
+        orderRepository.flush();
+
         return order.getId();
     }
 

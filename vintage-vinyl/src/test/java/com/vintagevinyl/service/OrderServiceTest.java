@@ -4,6 +4,7 @@ import com.vintagevinyl.exception.OrderNotFoundException;
 import com.vintagevinyl.model.*;
 import com.vintagevinyl.model.Record;
 import com.vintagevinyl.repository.OrderRepository;
+import com.vintagevinyl.repository.ShoppingCartRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ class OrderServiceTest {
     @Mock
     private ShoppingCartService shoppingCartService;
 
+    @Mock
+    private ShoppingCartRepository shoppingCartRepository;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -48,6 +52,7 @@ class OrderServiceTest {
         testRecord.setId(1L);
         testRecord.setTitle("Test Record");
         testRecord.setPrice(new BigDecimal("29.99"));
+        testRecord.setStock(10); // Adding sufficient stock for the test
 
         CartItem testCartItem = new CartItem();
         testCartItem.setRecord(testRecord);
@@ -80,6 +85,8 @@ class OrderServiceTest {
         // Given
         when(shoppingCartService.getCart(testUser)).thenReturn(testCart);
         when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
+        doNothing().when(shoppingCartRepository).flush();
+        doNothing().when(orderRepository).flush();
 
         // When
         Long orderId = orderService.createOrder(testUser, testCart, "Test Address", "Credit Card");
@@ -89,6 +96,8 @@ class OrderServiceTest {
         assertEquals(testOrder.getId(), orderId);
         verify(orderRepository).save(any(Order.class));
         verify(shoppingCartService).getCart(testUser);
+        verify(shoppingCartRepository).flush();
+        verify(orderRepository).flush();
     }
 
     @Test
