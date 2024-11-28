@@ -76,6 +76,9 @@ class RecordControllerTest {
     @DisplayName("Record Listing Tests")
     class RecordListingTests {
 
+        /**
+         * Test case for listing records with pagination.
+         */
         @Test
         @WithMockUser
         @DisplayName("Should list records with pagination")
@@ -92,6 +95,9 @@ class RecordControllerTest {
                     .andExpect(model().attributeExists("records", "currentPage", "totalPages", "search"));
         }
 
+        /**
+         * Test case for viewing details of a specific record.
+         */
         @Test
         @WithMockUser
         @DisplayName("Should show record details")
@@ -104,6 +110,9 @@ class RecordControllerTest {
                     .andExpect(model().attributeExists("record", "inStock", "stockStatus"));
         }
 
+        /**
+         * Test case for handling non-existent record access.
+         */
         @Test
         @WithMockUser
         @DisplayName("Should handle record not found")
@@ -120,6 +129,9 @@ class RecordControllerTest {
     @DisplayName("Admin Record Management Tests")
     class AdminRecordTests {
 
+        /**
+         * Test case for displaying the form to add a new record.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should show new record form")
@@ -130,6 +142,9 @@ class RecordControllerTest {
                     .andExpect(model().attributeExists("record"));
         }
 
+        /**
+         * Test case for saving a new record.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should save new record")
@@ -147,6 +162,9 @@ class RecordControllerTest {
             verify(recordService).saveRecord(any(Record.class));
         }
 
+        /**
+         * Test case for displaying the edit form for a specific record.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should show edit record form")
@@ -159,6 +177,9 @@ class RecordControllerTest {
                     .andExpect(model().attributeExists("record", "currentStock", "lowStockThreshold"));
         }
 
+        /**
+         * Test case for handling non-existent record access in edit form.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should handle edit form for non-existent record")
@@ -171,6 +192,9 @@ class RecordControllerTest {
                     .andExpect(model().attributeExists("errorMessage"));
         }
 
+        /**
+         * Test case for updating an existing record.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should update record")
@@ -189,6 +213,9 @@ class RecordControllerTest {
             verify(recordService).updateRecord(any(Record.class));
         }
 
+        /**
+         * Test case for deleting a record.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should delete record")
@@ -201,6 +228,9 @@ class RecordControllerTest {
             verify(recordService).deleteRecord(1L);
         }
 
+        /**
+         * Test case for displaying the CSV import form.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should show import form")
@@ -210,6 +240,9 @@ class RecordControllerTest {
                     .andExpect(view().name("record-import"));
         }
 
+        /**
+         * Test case for handling successful CSV import.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should handle CSV import")
@@ -231,6 +264,9 @@ class RecordControllerTest {
                     .andExpect(flash().attributeExists("message"));
         }
 
+        /**
+         * Test case for handling empty file upload during CSV import.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should handle empty file upload")
@@ -255,6 +291,9 @@ class RecordControllerTest {
     @DisplayName("Stock Management Tests")
     class StockManagementTests {
 
+        /**
+         * Test case for checking stock status as "In Stock."
+         */
         @Test
         @WithMockUser
         @DisplayName("Should check stock status")
@@ -266,6 +305,9 @@ class RecordControllerTest {
                     .andExpect(content().string("In Stock"));
         }
 
+        /**
+         * Test case for checking stock status as "Out of Stock."
+         */
         @Test
         @WithMockUser
         @DisplayName("Should check out of stock status")
@@ -278,6 +320,9 @@ class RecordControllerTest {
                     .andExpect(content().string("Out of Stock"));
         }
 
+        /**
+         * Test case for checking stock status as "Low Stock."
+         */
         @Test
         @WithMockUser
         @DisplayName("Should check low stock status")
@@ -295,6 +340,9 @@ class RecordControllerTest {
     @DisplayName("Wishlist Integration Tests")
     class WishlistTests {
 
+        /**
+         * Test case for adding a record to the wishlist.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should add record to wishlist")
@@ -310,6 +358,9 @@ class RecordControllerTest {
                     .andExpect(flash().attributeExists("message"));
         }
 
+        /**
+         * Test case for handling errors while adding a record to the wishlist.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should handle wishlist error")
@@ -325,6 +376,9 @@ class RecordControllerTest {
         }
     }
 
+    /**
+     * Test case for handling RecordNotFoundException.
+     */
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("Should handle record not found exception")

@@ -27,6 +27,10 @@ import java.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Controller for managing records, including listing, adding, editing, deleting, and importing records.
+ * Provides both admin and user-level functionalities.
+ */
 @Controller
 @RequestMapping("/records")
 public class RecordController {
@@ -45,6 +49,10 @@ public class RecordController {
     @Autowired
     private CSVImportService csvImportService;
 
+    /**
+     * Display a paginated list of records with optional search functionality.
+     * Accessible to all users.
+     */
     @GetMapping
     public String listRecords(@RequestParam(defaultValue = "1") int page,
                               @RequestParam(defaultValue = "") String search,
@@ -57,6 +65,10 @@ public class RecordController {
         return "records";
     }
 
+    /**
+     * Display details of a specific record.
+     * Adds stock status details to the model.
+     */
     @GetMapping("/{id}")
     public String viewRecord(@PathVariable Long id, Model model) {
         Record record = recordService.getRecordById(id);
@@ -70,15 +82,22 @@ public class RecordController {
         return "record-detail";
     }
 
+    /**
+     * Display a form to add a new record (admin only).
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/new")
     public String newRecordForm(Model model) {
         Record record = new Record();
-        record.setLowStockThreshold(5); // Set default low stock threshold
+        record.setLowStockThreshold(5); // Default low stock threshold
         model.addAttribute("record", record);
         return "record-form";
     }
 
+    /**
+     * Save a new record (admin only).
+     * Includes validation and sets default values for release date and stock.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public String saveRecord(@Valid @ModelAttribute Record record,
@@ -94,6 +113,9 @@ public class RecordController {
         return "redirect:/records";
     }
 
+    /**
+     * Display a form to edit an existing record (admin only).
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}/edit")
     public String editRecordForm(@PathVariable Long id, Model model) {
@@ -107,6 +129,10 @@ public class RecordController {
         return "record-form";
     }
 
+    /**
+     * Update an existing record (admin only).
+     * Preserves stock and low stock threshold values while allowing other updates.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}")
     public String updateRecord(@PathVariable Long id,
@@ -117,17 +143,21 @@ public class RecordController {
             return "record-form";
         }
 
-        // Retrieve existing record's stock information
+        // Retrieve and preserve existing stock and threshold values
         Record existingRecord = recordService.getRecordById(id);
         record.setId(id);
-        record.setStock(existingRecord.getStock()); // Keep original stock
-        record.setLowStockThreshold(existingRecord.getLowStockThreshold()); // Keep an original threshold
+        record.setStock(existingRecord.getStock());
+        record.setLowStockThreshold(existingRecord.getLowStockThreshold());
         record.setReleaseDate(LocalDate.of(releaseYear, 1, 1));
 
         recordService.updateRecord(record);
         return "redirect:/records";
     }
 
+    /**
+     * Check the stock status of a specific record.
+     * Returns a simple string representation of the stock status.
+     */
     @GetMapping("/{id}/stock-status")
     @ResponseBody
     public String checkStockStatus(@PathVariable Long id) {
@@ -141,6 +171,9 @@ public class RecordController {
         }
     }
 
+    /**
+     * Delete a record (admin only).
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/delete")
     public String deleteRecord(@PathVariable Long id) {
@@ -148,6 +181,9 @@ public class RecordController {
         return "redirect:/records";
     }
 
+    /**
+     * Add a record to the user's wishlist.
+     */
     @PostMapping("/{id}/addToWishlist")
     public String addToWishlist(@PathVariable Long id,
                                 @AuthenticationPrincipal UserDetails userDetails,
@@ -163,12 +199,19 @@ public class RecordController {
         return "redirect:/records/" + id;
     }
 
+    /**
+     * Show the CSV import form (admin only).
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/import")
     public String showImportForm() {
         return "record-import";
     }
 
+    /**
+     * Handle CSV import for bulk record creation or updates (admin only).
+     * Validates and processes the uploaded file.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/import")
     public String handleImport(@RequestParam("file") MultipartFile file,
@@ -190,11 +233,12 @@ public class RecordController {
         return "redirect:/records/import";
     }
 
+    /**
+     * Handle RecordNotFoundException globally for this controller.
+     */
     @ExceptionHandler(RecordNotFoundException.class)
     public String handleRecordNotFound(RecordNotFoundException ex, Model model) {
         model.addAttribute("errorMessage", ex.getMessage());
         return "error";
     }
 }
-
-

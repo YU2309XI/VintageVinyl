@@ -210,7 +210,7 @@ public class AdminOperationsIntegrationTest {
         assertTrue(outOfStockRecords.size() >= 2,
                 "Should have out of stock records");
 
-        // Get records needing restock
+        // Get records needing restocking
         List<Record> needingRestock = recordService.getRecordsNeedingRestock();
         assertFalse(needingRestock.isEmpty(),
                 "Should have records needing restock");

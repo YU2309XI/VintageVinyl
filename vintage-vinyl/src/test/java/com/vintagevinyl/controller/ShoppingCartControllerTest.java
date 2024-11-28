@@ -54,6 +54,9 @@ class ShoppingCartControllerTest {
         testCart.setItems(new ArrayList<>());
     }
 
+    /**
+     * Test case for redirecting unauthenticated users to the login page when accessing the cart.
+     */
     @Test
     @WithAnonymousUser
     @DisplayName("Should redirect unauthenticated user to login")
@@ -67,6 +70,9 @@ class ShoppingCartControllerTest {
     @DisplayName("Cart Operation Tests")
     class CartOperationTests {
 
+        /**
+         * Test case for displaying cart contents for an authenticated user.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should show cart contents")
@@ -80,6 +86,9 @@ class ShoppingCartControllerTest {
                     .andExpect(model().attributeExists("cart"));
         }
 
+        /**
+         * Test case for adding an item to the cart.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should add item to cart")
@@ -96,6 +105,9 @@ class ShoppingCartControllerTest {
                     .andExpect(flash().attributeExists("message"));
         }
 
+        /**
+         * Test case for removing an item from the cart.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should remove item from cart")
@@ -111,6 +123,9 @@ class ShoppingCartControllerTest {
                     .andExpect(flash().attributeExists("message"));
         }
 
+        /**
+         * Test case for clearing all items in the cart.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should clear cart")
@@ -124,6 +139,9 @@ class ShoppingCartControllerTest {
                     .andExpect(content().string("Cart cleared successfully"));
         }
 
+        /**
+         * Test case for retrieving the total price of items in the cart.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should get cart total")
@@ -136,6 +154,9 @@ class ShoppingCartControllerTest {
                     .andExpect(content().string("99.99"));
         }
 
+        /**
+         * Test case for updating the quantity of an item in the cart.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should update item quantity")
@@ -152,6 +173,9 @@ class ShoppingCartControllerTest {
                     .andExpect(content().string("Quantity updated successfully"));
         }
 
+        /**
+         * Test case for retrieving the total number of items in the cart.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should get cart item count")
@@ -169,6 +193,9 @@ class ShoppingCartControllerTest {
     @DisplayName("Cart Error Handling Tests")
     class CartErrorTests {
 
+        /**
+         * Test case for handling scenarios where the user is not found.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should handle user not found")
@@ -180,6 +207,9 @@ class ShoppingCartControllerTest {
                     .andExpect(redirectedUrl("/login"));
         }
 
+        /**
+         * Test case for handling invalid quantity during an update operation.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should handle invalid quantity")

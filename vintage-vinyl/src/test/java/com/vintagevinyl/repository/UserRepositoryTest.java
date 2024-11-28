@@ -47,6 +47,9 @@ public class UserRepositoryTest {
         return user;
     }
 
+    /**
+     * Test case for saving and retrieving a user.
+     */
     @Test
     @DisplayName("Should save and retrieve a user")
     void shouldSaveAndRetrieveUser() {
@@ -65,6 +68,9 @@ public class UserRepositoryTest {
                 });
     }
 
+    /**
+     * Test case for finding a user by their username.
+     */
     @Test
     @DisplayName("Should find user by username")
     void shouldFindByUsername() {
@@ -82,6 +88,9 @@ public class UserRepositoryTest {
                 );
     }
 
+    /**
+     * Test case for finding a user by their email.
+     */
     @Test
     @DisplayName("Should find user by email")
     void shouldFindByEmail() {
@@ -99,6 +108,9 @@ public class UserRepositoryTest {
                 );
     }
 
+    /**
+     * Test case for finding users by their enabled status.
+     */
     @Test
     @DisplayName("Should find users by enabled status")
     void shouldFindByEnabled() {
@@ -122,6 +134,9 @@ public class UserRepositoryTest {
                 .containsExactly("disabled");
     }
 
+    /**
+     * Test case for finding users by their account lock status.
+     */
     @Test
     @DisplayName("Should find users by account lock status")
     void shouldFindByAccountNonLocked() {
@@ -145,6 +160,9 @@ public class UserRepositoryTest {
                 .containsExactly("locked");
     }
 
+    /**
+     * Test case for finding users by their role.
+     */
     @Test
     @DisplayName("Should find users by role")
     void shouldFindByRole() {
@@ -170,6 +188,9 @@ public class UserRepositoryTest {
                 .containsExactly("admin1");
     }
 
+    /**
+     * Test case for finding users by enabled and account lock status.
+     */
     @Test
     @DisplayName("Should find users by enabled and lock status")
     void shouldFindByEnabledAndAccountNonLocked() {
@@ -193,6 +214,9 @@ public class UserRepositoryTest {
                 .containsExactly("inactive");
     }
 
+    /**
+     * Test case for counting users by role and enabled status.
+     */
     @Test
     @DisplayName("Should count users by role and enabled status")
     void shouldCountByRoleAndEnabled() {
@@ -214,6 +238,9 @@ public class UserRepositoryTest {
         assertThat(disabledCount).isEqualTo(1);
     }
 
+    /**
+     * Test case for managing user roles.
+     */
     @Test
     @DisplayName("Should handle user role management")
     void shouldManageUserRoles() {

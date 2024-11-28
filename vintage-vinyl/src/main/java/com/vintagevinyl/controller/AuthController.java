@@ -41,21 +41,31 @@ public class AuthController {
     @Autowired
     private OrderService orderService;
 
+    /**
+     * Redirect users from the root URL to the dashboard.
+     */
     @GetMapping("/")
     public String home() {
         return "redirect:/dashboard";  // Redirect to dashboard directly
     }
 
+    /**
+     * Show the registration form.
+     */
     @GetMapping("/register")
     public String showRegistrationForm(Model model) {
         model.addAttribute("user", new User());
         return "register";
     }
 
+    /**
+     * Handle user registration.
+     * Validates user input and creates a new user in the system.
+     */
     @PostMapping("/register")
     public String registerUser(@Valid @ModelAttribute("user") User user, BindingResult result, Model model, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
-            return "register";
+            return "register"; // Redisplay form with validation errors
         }
         try {
             userService.registerNewUser(user);
@@ -67,6 +77,10 @@ public class AuthController {
         }
     }
 
+    /**
+     * Show the login form.
+     * Handles optional query parameters for login error and logout messages.
+     */
     @GetMapping("/login")
     public String showLoginForm(@RequestParam(required = false) String error,
                                 @RequestParam(required = false) String logout,
@@ -82,6 +96,10 @@ public class AuthController {
         return "login";
     }
 
+    /**
+     * Render the dashboard page.
+     * Fetches user details and recent orders for the authenticated user.
+     */
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -93,12 +111,15 @@ public class AuthController {
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.toList()));
 
-            List<Order> recentOrders = orderService.getRecentOrdersForUser(user, 5);
+            List<Order> recentOrders = orderService.getRecentOrdersForUser(user, 5); // Fetch last 5 orders
             model.addAttribute("recentOrders", recentOrders);
         }
         return "dashboard";
     }
 
+    /**
+     * View all orders for the authenticated user.
+     */
     @GetMapping("/orders")
     public String viewOrders(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         User user = userService.findByUsername(userDetails.getUsername());
@@ -107,6 +128,10 @@ public class AuthController {
         return "orders";
     }
 
+    /**
+     * Render the account management page.
+     * Displays current user details for editing.
+     */
     @GetMapping("/account")
     public String manageAccount(Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -115,6 +140,10 @@ public class AuthController {
         return "account";
     }
 
+    /**
+     * Handle account updates.
+     * Supports updating basic details and password changes.
+     */
     @PostMapping("/account")
     public String updateAccount(@Valid @ModelAttribute("user") User user,
                                 BindingResult result,
@@ -130,13 +159,12 @@ public class AuthController {
         try {
             User currentUser = userService.findByUsername(username);
 
-            // 创建更新的用户对象，只包含要更新的字段
+            // Update only specific fields to avoid overwriting unintended details
             User updatedUser = new User();
             updatedUser.setEmail(user.getEmail());
-            // 调用新版本的 updateUser 方法
             userService.updateUser(currentUser.getId(), updatedUser, username);
 
-            // 如果需要更新密码
+            // Handle password update logic
             if (currentPassword != null && !currentPassword.isEmpty()) {
                 if (newPassword == null || newPassword.isEmpty() ||
                         confirmNewPassword == null || confirmNewPassword.isEmpty()) {
@@ -172,6 +200,10 @@ public class AuthController {
     @Autowired
     private WishlistService wishlistService;
 
+    /**
+     * View the user's wishlist.
+     * Fetches wishlist details for the authenticated user.
+     */
     @GetMapping("/wishlist")
     public String viewWishlist(Model model) {
         try {
@@ -188,6 +220,9 @@ public class AuthController {
         }
     }
 
+    /**
+     * Add a record to the user's wishlist.
+     */
     @PostMapping("/wishlist/add")
     public String addToWishlist(@RequestParam Long recordId, RedirectAttributes redirectAttributes) {
         try {
@@ -202,6 +237,9 @@ public class AuthController {
         return "redirect:/records";
     }
 
+    /**
+     * Remove an item from the user's wishlist.
+     */
     @PostMapping("/wishlist/remove")
     public String removeFromWishlist(@RequestParam int itemIndex, RedirectAttributes redirectAttributes) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

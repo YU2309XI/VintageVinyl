@@ -17,6 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Service class for managing user-related operations.
+ *
+ * This class handles user registration, authentication, role management,
+ * and account activation/deactivation.
+ * It also implements the
+ * `UserDetailsService` interface for Spring Security authentication
+ * and the `GenericService` interface for common CRUD operations.
+ */
 @Service
 public class UserService implements UserDetailsService, GenericService<User, Long> {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
@@ -27,6 +36,13 @@ public class UserService implements UserDetailsService, GenericService<User, Lon
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    /**
+     * Loads a user by their username for authentication purposes.
+     *
+     * @param username the username of the user to be loaded
+     * @return the UserDetails of the loaded user
+     * @throws UsernameNotFoundException if the user does not exist
+     */
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -52,11 +68,24 @@ public class UserService implements UserDetailsService, GenericService<User, Lon
         return user;
     }
 
+    /**
+     * Finds a user by their username.
+     *
+     * @param username the username of the user
+     * @return the User entity
+     */
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
 
+    /**
+     * Registers a new user after validating that the username and email are unique.
+     *
+     * @param user the user to register
+     * @return the registered User entity
+     * @throws UserAlreadyExistsException if the username or email already exists
+     */
     @Transactional
     public User registerNewUser(User user) {
         logger.info("Attempting to register new user: {}", user.getUsername());
@@ -81,6 +110,13 @@ public class UserService implements UserDetailsService, GenericService<User, Lon
         return savedUser;
     }
 
+    /**
+     * Activates a user account.
+     *
+     * @param userId the ID of the user to activate
+     * @param modifiedBy the username of the modifier
+     * @return the updated User entity
+     */
     @Transactional
     public User activateUser(Long userId, String modifiedBy) {
         User user = userRepository.findById(userId)
@@ -90,6 +126,14 @@ public class UserService implements UserDetailsService, GenericService<User, Lon
         return userRepository.save(user);
     }
 
+    /**
+     * Deactivates a user account, ensuring the last active admin cannot be deactivated.
+     *
+     * @param userId the ID of the user to deactivate
+     * @param modifiedBy the username of the modifier
+     * @return the updated User entity
+     * @throws IllegalStateException if attempting to deactivate the last active admin
+     */
     @Transactional
     public User deactivateUser(Long userId, String modifiedBy) {
         User user = userRepository.findById(userId)
@@ -107,6 +151,13 @@ public class UserService implements UserDetailsService, GenericService<User, Lon
         return userRepository.save(user);
     }
 
+    /**
+     * Locks a user account, ensuring the last active admin cannot be locked.
+     *
+     * @param userId the ID of the user to lock
+     * @param modifiedBy the username of the modifier
+     * @return the updated User entity
+     */
     @Transactional
     public User lockUser(Long userId, String modifiedBy) {
         User user = userRepository.findById(userId)
@@ -124,6 +175,13 @@ public class UserService implements UserDetailsService, GenericService<User, Lon
         return userRepository.save(user);
     }
 
+    /**
+     * Unlocks a user account.
+     *
+     * @param userId the ID of the user to unlock
+     * @param modifiedBy the username of the modifier
+     * @return the updated User entity
+     */
     @Transactional
     public User unlockUser(Long userId, String modifiedBy) {
         User user = userRepository.findById(userId)
@@ -133,6 +191,14 @@ public class UserService implements UserDetailsService, GenericService<User, Lon
         return userRepository.save(user);
     }
 
+    /**
+     * Updates a user's profile, ensuring unique email validation.
+     *
+     * @param userId the ID of the user to update
+     * @param updatedUser the updated user data
+     * @param modifiedBy the username of the modifier
+     * @return the updated User entity
+     */
     @Transactional
     public User updateUser(Long userId, User updatedUser, String modifiedBy) {
         logger.info("Updating user with ID: {}", userId);
@@ -156,6 +222,12 @@ public class UserService implements UserDetailsService, GenericService<User, Lon
         return savedUser;
     }
 
+    /**
+     * Sets the admin role for a user.
+     *
+     * @param username the username of the user
+     * @return the updated User entity with the admin role added
+     */
     @Transactional
     public User setAdminRole(String username) {
         User user = findByUsername(username);
@@ -163,6 +235,14 @@ public class UserService implements UserDetailsService, GenericService<User, Lon
         return userRepository.save(user);
     }
 
+    /**
+     * Changes the password for a user.
+     *
+     * @param user the user entity
+     * @param currentPassword the current password for validation
+     * @param newPassword the new password to set
+     * @throws IllegalArgumentException if the current password is incorrect
+     */
     @Transactional
     public void changeUserPassword(User user, String currentPassword, String newPassword) {
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
@@ -204,14 +284,30 @@ public class UserService implements UserDetailsService, GenericService<User, Lon
         logger.info("User deleted successfully: {}", user.getUsername());
     }
 
+    /**
+     * Retrieves a list of active users.
+     *
+     * @return a list of active users
+     */
     public List<User> findActiveUsers() {
         return userRepository.findByEnabled(true);
     }
 
+    /**
+     * Retrieves a list of locked users.
+     *
+     * @return a list of locked users
+     */
     public List<User> findLockedUsers() {
         return userRepository.findByAccountNonLocked(false);
     }
 
+    /**
+     * Checks if the given user is the last active admin.
+     *
+     * @param user the user to check
+     * @return true if the user is the last active admin
+     */
     public boolean isLastActiveAdmin(User user) {
         return user.getRoles().contains("ROLE_ADMIN") &&
                 userRepository.countByRolesContainingAndEnabled("ROLE_ADMIN", true) <= 1;

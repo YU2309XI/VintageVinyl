@@ -7,15 +7,31 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
+/**
+ * Service class for managing records (vinyl records).
+ *
+ * This class provides methods for managing record entities, including CRUD operations,
+ * inventory management, and querying records based on stock levels and search criteria.
+ */
 @Service
 public class RecordService {
+
     @Autowired
     private RecordRepository recordRepository;
+
     @Autowired
     private ShoppingCartService shoppingCartService;
 
+    /**
+     * Retrieves all records, optionally filtered by a search term, with pagination support.
+     *
+     * @param pageable the pagination and sorting information
+     * @param search the search term to filter records by title or artist
+     * @return a page of records
+     */
     public Page<Record> getAllRecords(Pageable pageable, String search) {
         if (search != null && !search.isEmpty()) {
             return recordRepository.findByTitleContainingOrArtistContaining(search, search, pageable);
@@ -24,20 +40,42 @@ public class RecordService {
         }
     }
 
+    /**
+     * Retrieves a record by its ID.
+     *
+     * @param id the ID of the record
+     * @return the record entity
+     * @throws RuntimeException if the record is not found
+     */
     @Transactional(readOnly = true)
     public Record getRecordById(Long id) {
         return recordRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Record not found"));
     }
 
+    /**
+     * Saves a new record or updates an existing one.
+     *
+     * @param record the record entity to save
+     */
     public void saveRecord(Record record) {
         recordRepository.save(record);
     }
 
+    /**
+     * Updates an existing record.
+     *
+     * @param record the record entity with updated information
+     */
     public void updateRecord(Record record) {
         recordRepository.save(record);
     }
 
+    /**
+     * Deletes a record by its ID and removes associated items from all shopping carts.
+     *
+     * @param id the ID of the record to delete
+     */
     @Transactional
     public void deleteRecord(Long id) {
         Record record = recordRepository.findById(id).orElse(null);
@@ -47,13 +85,14 @@ public class RecordService {
         }
     }
 
-    // New inventory management methods
+    // Inventory management methods
 
     /**
-     * Update stock quantity for a record
-     * @param recordId Record identifier
-     * @param quantity New stock quantity
-     * @throws RuntimeException if record not found
+     * Updates the stock quantity of a record.
+     *
+     * @param recordId the ID of the record
+     * @param quantity the new stock quantity
+     * @throws RuntimeException if the record is not found
      */
     @Transactional
     public void updateStock(Long recordId, int quantity) {
@@ -63,10 +102,11 @@ public class RecordService {
     }
 
     /**
-     * Add stock to a record
-     * @param recordId Record identifier
-     * @param quantity Quantity to add
-     * @throws RuntimeException if record not found
+     * Adds stock to a record.
+     *
+     * @param recordId the ID of the record
+     * @param quantity the quantity to add
+     * @throws RuntimeException if the record is not found
      */
     @Transactional
     public void addStock(Long recordId, int quantity) {
@@ -76,10 +116,11 @@ public class RecordService {
     }
 
     /**
-     * Reduce stock from a record
-     * @param recordId Record identifier
-     * @param quantity Quantity to reduce
-     * @throws RuntimeException if record not found or insufficient stock
+     * Reduces stock from a record.
+     *
+     * @param recordId the ID of the record
+     * @param quantity the quantity to reduce
+     * @throws RuntimeException if the record is not found or stock is insufficient
      */
     @Transactional
     public void reduceStock(Long recordId, int quantity) {
@@ -89,8 +130,9 @@ public class RecordService {
     }
 
     /**
-     * Get all records with stock below their threshold
-     * @return List of records with low stock
+     * Retrieves records with stock below their low stock threshold.
+     *
+     * @return a list of records with low stock
      */
     @Transactional(readOnly = true)
     public List<Record> getLowStockRecords() {
@@ -98,8 +140,9 @@ public class RecordService {
     }
 
     /**
-     * Get records that need restocking, ordered by remaining stock
-     * @return List of records needing restock
+     * Retrieves records that need restocking, ordered by their remaining stock.
+     *
+     * @return a list of records needing restocking
      */
     @Transactional(readOnly = true)
     public List<Record> getRecordsNeedingRestock() {
@@ -107,11 +150,12 @@ public class RecordService {
     }
 
     /**
-     * Check if record has sufficient stock
-     * @param recordId Record identifier
-     * @param quantity Quantity to check
-     * @return true if record has enough stock
-     * @throws RuntimeException if record not found
+     * Checks if a record has sufficient stock for a given quantity.
+     *
+     * @param recordId the ID of the record
+     * @param quantity the quantity to check
+     * @return true if the record has enough stocks
+     * @throws RuntimeException if the record is not found
      */
     @Transactional(readOnly = true)
     public boolean hasEnoughStock(Long recordId, int quantity) {
@@ -120,10 +164,11 @@ public class RecordService {
     }
 
     /**
-     * Get current stock level for a record
-     * @param recordId Record identifier
-     * @return Current stock quantity
-     * @throws RuntimeException if record not found
+     * Retrieves the current stock level of a record.
+     *
+     * @param recordId the ID of the record
+     * @return the current stock quantity
+     * @throws RuntimeException if the record is not found
      */
     @Transactional(readOnly = true)
     public int getCurrentStock(Long recordId) {
@@ -132,8 +177,9 @@ public class RecordService {
     }
 
     /**
-     * Get count of records with low stock
-     * @return Number of records with low stock
+     * Counts the number of records with stock below their low-stock threshold.
+     *
+     * @return the count of low-stock records
      */
     @Transactional(readOnly = true)
     public long getLowStockCount() {
@@ -141,8 +187,9 @@ public class RecordService {
     }
 
     /**
-     * Get out of stock records
-     * @return List of records with zero stock
+     * Retrieves records that are out of stock.
+     *
+     * @return a list of records with zero stocks
      */
     @Transactional(readOnly = true)
     public List<Record> getOutOfStockRecords() {
@@ -150,10 +197,11 @@ public class RecordService {
     }
 
     /**
-     * Update low stock threshold for a record
-     * @param recordId Record identifier
-     * @param threshold New threshold value
-     * @throws RuntimeException if record not found
+     * Updates the low stock threshold for a record.
+     *
+     * @param recordId the ID of the record
+     * @param threshold the new low stock threshold
+     * @throws RuntimeException if the record is not found
      */
     @Transactional
     public void updateLowStockThreshold(Long recordId, int threshold) {

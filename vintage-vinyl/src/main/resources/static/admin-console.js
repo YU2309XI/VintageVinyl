@@ -1,16 +1,21 @@
 $(document).ready(function() {
-    // CSRF Token 处理
+    // CSRF Token handling for AJAX requests
     const token = $("meta[name='_csrf']").attr("content");
     const header = $("meta[name='_csrf_header']").attr("content");
 
-    // 设置全局 AJAX 默认值
+    // Set global AJAX defaults to include CSRF headers
     $.ajaxSetup({
         beforeSend: function(xhr) {
             xhr.setRequestHeader(header, token);
         }
     });
 
-    // 消息显示函数
+    /**
+     * Display success or error messages to the user.
+     *
+     * @param {string} message - The message to display.
+     * @param {boolean} [isError=false] - Whether the message is an error message.
+     */
     function showMessage(message, isError = false) {
         const messageDiv = isError ? $("#errorMessage") : $("#successMessage");
         const otherDiv = isError ? $("#successMessage") : $("#errorMessage");
@@ -18,10 +23,14 @@ $(document).ready(function() {
         messageDiv.text(message).show();
         otherDiv.hide();
 
+        // Automatically hide the message after 3 seconds
         setTimeout(() => messageDiv.fadeOut(), 3000);
     }
 
-    // 保留现有的设置管理员功能
+    /**
+     * Assign an admin role to a user.
+     * Triggered by clicking the "Make Admin" button.
+     */
     $('.make-admin-btn').click(function() {
         const username = $(this).data('username');
         if (confirm('Are you sure you want to make ' + username + ' an admin?')) {
@@ -40,7 +49,9 @@ $(document).ready(function() {
         }
     });
 
-    // 编辑用户功能
+    /**
+     * Open the edit user modal and populate fields with user data.
+     */
     $('.edit-user-btn').click(function() {
         const id = $(this).data('id');
         const username = $(this).data('username');
@@ -49,10 +60,13 @@ $(document).ready(function() {
         $('#editUserId').val(id);
         $('#editUsername').val(username);
         $('#editEmail').val(email);
-        $('#editPassword').val(''); // 清空密码字段
+        $('#editPassword').val(''); // Clear password field
         $('#editUserModal').modal('show');
     });
 
+    /**
+     * Save changes made to a user in the edit user modal.
+     */
     $('#saveUserEdit').click(function() {
         const id = $('#editUserId').val();
         const userData = {
@@ -77,7 +91,9 @@ $(document).ready(function() {
         });
     });
 
-    // 删除用户功能
+    /**
+     * Delete a user by clicking the deleted button.
+     */
     $('.delete-user-btn').click(function() {
         const id = $(this).data('id');
         const username = $(this).data('username');
@@ -97,7 +113,9 @@ $(document).ready(function() {
         }
     });
 
-    // 激活用户功能
+    /**
+     * Activate a user's account.
+     */
     $('.activate-user-btn').click(function() {
         const id = $(this).data('id');
         $.ajax({
@@ -113,7 +131,9 @@ $(document).ready(function() {
         });
     });
 
-    // 停用用户功能
+    /**
+     * Deactivate a user's account.
+     */
     $('.deactivate-user-btn').click(function() {
         const id = $(this).data('id');
         if (confirm('Are you sure you want to deactivate this user?')) {
@@ -131,7 +151,9 @@ $(document).ready(function() {
         }
     });
 
-    // 锁定用户功能
+    /**
+     * Lock a user's account to prevent access.
+     */
     $('.lock-user-btn').click(function() {
         const id = $(this).data('id');
         if (confirm('Are you sure you want to lock this user?')) {
@@ -149,7 +171,9 @@ $(document).ready(function() {
         }
     });
 
-    // 解锁用户功能
+    /**
+     * Unlock a user's account.
+     */
     $('.unlock-user-btn').click(function() {
         const id = $(this).data('id');
         $.ajax({
@@ -165,7 +189,9 @@ $(document).ready(function() {
         });
     });
 
-    // 表单验证
+    /**
+     * Validate the edit user form before submission.
+     */
     $('#editUserForm').on('submit', function(e) {
         e.preventDefault();
 
@@ -184,7 +210,11 @@ $(document).ready(function() {
         $('#saveUserEdit').click();
     });
 
-    // 错误处理函数
+    /**
+     * Handle AJAX errors globally for better user feedback.
+     *
+     * @param {Object} xhr - The XMLHttpRequest object containing error details.
+     */
     function handleError(xhr) {
         let errorMessage;
         try {

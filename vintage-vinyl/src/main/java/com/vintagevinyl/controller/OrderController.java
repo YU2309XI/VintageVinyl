@@ -20,6 +20,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
+/**
+ * Controller for handling order-related operations, including checkout, order viewing, and management.
+ */
 @Controller
 public class OrderController {
 
@@ -32,41 +35,48 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+    /**
+     * Show the checkout page for the authenticated user.
+     * This method retrieves the user's shopping cart and passes it to the checkout view.
+     */
     @GetMapping("/checkout")
     @Transactional
     public String showCheckoutForm(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         User user = userService.findByUsername(userDetails.getUsername());
         ShoppingCart cart = shoppingCartService.getCart(user);
+
+        // Ensure lazy-loaded items are initialized
         cart.getItems().size();
         model.addAttribute("cart", cart);
         return "checkout";
     }
 
+    /**
+     * Process the checkout and create an order for the authenticated user.
+     * Clears the shopping cart after order creation.
+     */
     @PostMapping("/checkout")
     @Transactional
     public String processCheckout(@AuthenticationPrincipal UserDetails userDetails,
                                   @RequestParam("shippingAddress") String shippingAddress,
                                   @RequestParam("paymentMethod") String paymentMethod) {
-        System.out.println("Processing checkout...");
-        System.out.println("User: " + userDetails.getUsername());
-        System.out.println("Shipping Address: " + shippingAddress);
-        System.out.println("Payment Method: " + paymentMethod);
-
         User user = userService.findByUsername(userDetails.getUsername());
         ShoppingCart cart = shoppingCartService.getCart(user);
 
         try {
             Long orderId = orderService.createOrder(user, cart, shippingAddress, paymentMethod);
-            System.out.println("Order created successfully. Order ID: " + orderId);
             shoppingCartService.clearCart(user);
             return "redirect:/orders/" + orderId;
         } catch (Exception e) {
-            System.out.println("Error creating order: " + e.getMessage());
             e.printStackTrace();
             return "redirect:/checkout?error";
         }
     }
 
+    /**
+     * View details of a specific order.
+     * Admin users can view any order, while regular users can only view their own orders.
+     */
     @GetMapping("/orders/{orderId}")
     public String viewOrderDetails(@PathVariable("orderId") Long orderId,
                                    @AuthenticationPrincipal UserDetails userDetails,
@@ -92,6 +102,10 @@ public class OrderController {
         }
     }
 
+    /**
+     * View all orders (admin only).
+     * Uses @PreAuthorize to ensure only users with the ADMIN role can access this endpoint.
+     */
     @GetMapping("/admin/orders")
     @PreAuthorize("hasRole('ADMIN')")
     public String viewAllOrders(Model model) {
@@ -100,7 +114,10 @@ public class OrderController {
         return "admin-orders";
     }
 
-
+    /**
+     * View details of a specific order as an admin.
+     * Admins can access this endpoint to view order details by ID.
+     */
     @GetMapping("/admin/orders/{orderId}")
     @PreAuthorize("hasRole('ADMIN')")
     public String viewAdminOrderDetails(@PathVariable("orderId") Long orderId, Model model) {
@@ -113,6 +130,10 @@ public class OrderController {
         }
     }
 
+    /**
+     * Update the status of an order (admin only).
+     * Handles status updates and redirects back to the admin order management page.
+     */
     @PostMapping("/admin/orders/{orderId}/update-status")
     @PreAuthorize("hasRole('ADMIN')")
     public String updateOrderStatus(@PathVariable("orderId") Long orderId,
@@ -122,12 +143,17 @@ public class OrderController {
         try {
             orderService.updateOrderStatus(orderId, status);
             redirectAttributes.addFlashAttribute("message", "Order status updated successfully to " + status);
-            return "redirect:/admin/orders";        } catch (Exception e) {
+            return "redirect:/admin/orders";
+        } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error updating order status: " + e.getMessage());
             return "redirect:/orders/" + orderId;
         }
     }
 
+    /**
+     * Cancel an order for the authenticated user.
+     * Admin users can cancel any order, while regular users can cancel only their own orders.
+     */
     @PostMapping("/orders/{orderId}/cancel")
     public String cancelOrder(@PathVariable("orderId") Long orderId,
                               @AuthenticationPrincipal UserDetails userDetails,
@@ -151,7 +177,10 @@ public class OrderController {
         }
     }
 
-
+    /**
+     * Delete an order (admin only).
+     * Removes an order by its ID.
+     */
     @PostMapping("/admin/orders/{orderId}/delete")
     @PreAuthorize("hasRole('ADMIN')")
     public String deleteOrder(@PathVariable("orderId") Long orderId, RedirectAttributes redirectAttributes) {
@@ -163,5 +192,4 @@ public class OrderController {
         }
         return "redirect:/admin/orders";
     }
-
 }

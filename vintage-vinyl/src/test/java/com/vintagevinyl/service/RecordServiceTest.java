@@ -40,7 +40,7 @@ class RecordServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Initialize test record
+        // Initialize a test record
         testRecord = new Record();
         testRecord.setId(1L);
         testRecord.setTitle("Test Album");
@@ -51,274 +51,277 @@ class RecordServiceTest {
         testRecord.setReleaseDate(LocalDate.now());
         testRecord.setGenre("Rock");
 
-        // Initialize a record list
+        // Initialize a list of records
         recordList = List.of(testRecord);
     }
 
+    /**
+     * Test retrieving all records with pagination
+     */
     @Test
     @DisplayName("Should get all records with pagination")
     void getAllRecords_WithPagination_Success() {
-        // Given
         Pageable pageable = PageRequest.of(0, 10);
         Page<Record> recordPage = new PageImpl<>(recordList);
         when(recordRepository.findAll(pageable)).thenReturn(recordPage);
 
-        // When
         Page<Record> result = recordService.getAllRecords(pageable, null);
 
-        // Then
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(recordRepository).findAll(pageable);
     }
 
+    /**
+     * Test retrieving all records with search functionality
+     */
     @Test
     @DisplayName("Should get all records with search")
     void getAllRecords_WithSearch_Success() {
-        // Given
         Pageable pageable = PageRequest.of(0, 10);
         String search = "Test";
         Page<Record> recordPage = new PageImpl<>(recordList);
         when(recordRepository.findByTitleContainingOrArtistContaining(search, search, pageable))
                 .thenReturn(recordPage);
 
-        // When
         Page<Record> result = recordService.getAllRecords(pageable, search);
 
-        // Then
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(recordRepository).findByTitleContainingOrArtistContaining(search, search, pageable);
     }
 
+    /**
+     * Test retrieving a record by ID
+     */
     @Test
     @DisplayName("Should get record by ID")
     void getRecordById_Success() {
-        // Given
         when(recordRepository.findById(1L)).thenReturn(Optional.of(testRecord));
 
-        // When
         Record result = recordService.getRecordById(1L);
 
-        // Then
         assertNotNull(result);
         assertEquals(testRecord.getId(), result.getId());
         verify(recordRepository).findById(1L);
     }
 
+    /**
+     * Test exception when record is not found
+     */
     @Test
     @DisplayName("Should throw exception when record not found")
     void getRecordById_NotFound_ThrowsException() {
-        // Given
         when(recordRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // When & Then
         assertThrows(RuntimeException.class, () -> recordService.getRecordById(999L));
         verify(recordRepository).findById(999L);
     }
 
+    /**
+     * Test saving a record
+     */
     @Test
     @DisplayName("Should save record successfully")
     void saveRecord_Success() {
-        // Given
         when(recordRepository.save(any(Record.class))).thenReturn(testRecord);
 
-        // When
         recordService.saveRecord(testRecord);
 
-        // Then
         verify(recordRepository).save(testRecord);
     }
 
+    /**
+     * Test updating a record
+     */
     @Test
     @DisplayName("Should update record successfully")
     void updateRecord_Success() {
-        // Given
         when(recordRepository.save(any(Record.class))).thenReturn(testRecord);
 
-        // When
         recordService.updateRecord(testRecord);
 
-        // Then
         verify(recordRepository).save(testRecord);
     }
 
+    /**
+     * Test deleting a record
+     */
     @Test
     @DisplayName("Should delete record successfully")
     void deleteRecord_Success() {
-        // Given
         when(recordRepository.findById(1L)).thenReturn(Optional.of(testRecord));
 
-        // When
         recordService.deleteRecord(1L);
 
-        // Then
         verify(shoppingCartService).removeAllCartItemsForRecord(1L);
         verify(recordRepository).delete(testRecord);
     }
 
+    /**
+     * Test updating stock quantity of a record
+     */
     @Test
     @DisplayName("Should update stock quantity successfully")
     void updateStock_Success() {
-        // Given
         when(recordRepository.findById(1L)).thenReturn(Optional.of(testRecord));
         when(recordRepository.save(any(Record.class))).thenReturn(testRecord);
 
-        // When
         recordService.updateStock(1L, 20);
 
-        // Then
         assertEquals(20, testRecord.getStock());
         verify(recordRepository).save(testRecord);
     }
 
+    /**
+     * Test adding stock to a record
+     */
     @Test
     @DisplayName("Should add stock successfully")
     void addStock_Success() {
-        // Given
         when(recordRepository.findById(1L)).thenReturn(Optional.of(testRecord));
         when(recordRepository.save(any(Record.class))).thenReturn(testRecord);
 
-        // When
         recordService.addStock(1L, 5);
 
-        // Then
         assertEquals(15, testRecord.getStock());
         verify(recordRepository).save(testRecord);
     }
 
+    /**
+     * Test reducing stock of a record
+     */
     @Test
     @DisplayName("Should reduce stock successfully")
     void reduceStock_Success() {
-        // Given
         when(recordRepository.findById(1L)).thenReturn(Optional.of(testRecord));
         when(recordRepository.save(any(Record.class))).thenReturn(testRecord);
 
-        // When
         recordService.reduceStock(1L, 5);
 
-        // Then
         assertEquals(5, testRecord.getStock());
         verify(recordRepository).save(testRecord);
     }
 
+    /**
+     * Test exception when reducing stock below available quantity
+     */
     @Test
     @DisplayName("Should throw exception when reducing more than available stock")
     void reduceStock_InsufficientStock_ThrowsException() {
-        // Given
         when(recordRepository.findById(1L)).thenReturn(Optional.of(testRecord));
 
-        // When & Then
         assertThrows(IllegalStateException.class, () -> recordService.reduceStock(1L, 15));
     }
 
+    /**
+     * Test retrieving low stock records
+     */
     @Test
     @DisplayName("Should get low stock records")
     void getLowStockRecords_Success() {
-        // Given
         when(recordRepository.findLowStockRecords()).thenReturn(recordList);
 
-        // When
         List<Record> result = recordService.getLowStockRecords();
 
-        // Then
         assertNotNull(result);
         assertEquals(1, result.size());
         verify(recordRepository).findLowStockRecords();
     }
 
+    /**
+     * Test retrieving records needing restocking
+     */
     @Test
     @DisplayName("Should get records needing restock")
     void getRecordsNeedingRestock_Success() {
-        // Given
         when(recordRepository.findRecordsNeedingRestock()).thenReturn(recordList);
 
-        // When
         List<Record> result = recordService.getRecordsNeedingRestock();
 
-        // Then
         assertNotNull(result);
         assertEquals(1, result.size());
         verify(recordRepository).findRecordsNeedingRestock();
     }
 
+    /**
+     * Test checking if record has enough stocks
+     */
     @Test
     @DisplayName("Should check if record has enough stock")
     void hasEnoughStock_Success() {
-        // Given
         when(recordRepository.findById(1L)).thenReturn(Optional.of(testRecord));
 
-        // When
         boolean result = recordService.hasEnoughStock(1L, 5);
 
-        // Then
         assertTrue(result);
         verify(recordRepository).findById(1L);
     }
 
+    /**
+     * Test retrieving current stock level
+     */
     @Test
     @DisplayName("Should get current stock level")
     void getCurrentStock_Success() {
-        // Given
         when(recordRepository.findById(1L)).thenReturn(Optional.of(testRecord));
 
-        // When
         int result = recordService.getCurrentStock(1L);
 
-        // Then
         assertEquals(10, result);
         verify(recordRepository).findById(1L);
     }
 
+    /**
+     * Test retrieving low stock count
+     */
     @Test
     @DisplayName("Should get low stock count")
     void getLowStockCount_Success() {
-        // Given
         when(recordRepository.countLowStockRecords()).thenReturn(1L);
 
-        // When
         long result = recordService.getLowStockCount();
 
-        // Then
         assertEquals(1L, result);
         verify(recordRepository).countLowStockRecords();
     }
 
+    /**
+     * Test retrieving out-of-stock records
+     */
     @Test
     @DisplayName("Should get out of stock records")
     void getOutOfStockRecords_Success() {
-        // Given
         when(recordRepository.findByStockEquals(0)).thenReturn(recordList);
 
-        // When
         List<Record> result = recordService.getOutOfStockRecords();
 
-        // Then
         assertNotNull(result);
         assertEquals(1, result.size());
         verify(recordRepository).findByStockEquals(0);
     }
 
+    /**
+     * Test updating a low stock threshold
+     */
     @Test
     @DisplayName("Should update low stock threshold successfully")
     void updateLowStockThreshold_Success() {
-        // Given
         when(recordRepository.findById(1L)).thenReturn(Optional.of(testRecord));
         when(recordRepository.save(any(Record.class))).thenReturn(testRecord);
 
-        // When
         recordService.updateLowStockThreshold(1L, 10);
 
-        // Then
         assertEquals(10, testRecord.getLowStockThreshold());
         verify(recordRepository).save(testRecord);
     }
 
+    /**
+     * Test exception when updating a low stock threshold with a negative value
+     */
     @Test
     @DisplayName("Should throw exception when updating threshold with negative value")
     void updateLowStockThreshold_NegativeValue_ThrowsException() {
-        // Given & When & Then
-        assertThrows(IllegalArgumentException.class,
-                () -> recordService.updateLowStockThreshold(1L, -1));
+        assertThrows(IllegalArgumentException.class, () -> recordService.updateLowStockThreshold(1L, -1));
     }
 }

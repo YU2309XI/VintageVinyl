@@ -139,7 +139,7 @@ public class WishlistIntegrationTest {
      */
     @Test
     void getWishlistForNewUser() {
-        // Get wishlist for new user
+        // Get a wishlist for new user
         Wishlist wishlist = wishlistService.getWishlistForUser(testUser);
 
         // Verify new wishlist state

@@ -19,7 +19,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@DataJpaTest
+@DataJpaTest  // JPA component testing
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class ShoppingCartRepositoryTest {
 
@@ -69,6 +69,9 @@ public class ShoppingCartRepositoryTest {
         entityManager.flush();
     }
 
+    /**
+     * Test case for saving and retrieving a shopping cart.
+     */
     @Test
     @DisplayName("Should save and retrieve a shopping cart")
     void shouldSaveAndRetrieveCart() {
@@ -86,6 +89,9 @@ public class ShoppingCartRepositoryTest {
                 });
     }
 
+    /**
+     * Test case for finding a shopping cart by user.
+     */
     @Test
     @DisplayName("Should find cart by user")
     void shouldFindCartByUser() {
@@ -104,6 +110,9 @@ public class ShoppingCartRepositoryTest {
                 });
     }
 
+    /**
+     * Test case for managing items in the shopping cart.
+     */
     @Test
     @DisplayName("Should manage cart items")
     void shouldManageCartItems() {
@@ -133,6 +142,9 @@ public class ShoppingCartRepositoryTest {
                 .isEqualByComparingTo(BigDecimal.valueOf(69.97)); // 29.99 + (19.99 * 2)
     }
 
+    /**
+     * Test case for enforcing constraints on cart item quantities.
+     */
     @Test
     @DisplayName("Should enforce cart item quantity constraints")
     void shouldEnforceCartItemQuantityConstraints() {
@@ -150,6 +162,9 @@ public class ShoppingCartRepositoryTest {
                 .hasMessage("Quantity cannot exceed " + CartItem.MAX_QUANTITY);
     }
 
+    /**
+     * Test case for removing items from the cart by record ID.
+     */
     @Test
     @DisplayName("Should remove items by record ID")
     void shouldRemoveItemsByRecordId() {
@@ -166,6 +181,9 @@ public class ShoppingCartRepositoryTest {
         assertThat(updatedCart.getTotal()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
+    /**
+     * Test case for calculating the correct subtotal for a cart item.
+     */
     @Test
     @DisplayName("Should calculate correct subtotal for cart item")
     void shouldCalculateCorrectSubtotal() {
@@ -181,6 +199,9 @@ public class ShoppingCartRepositoryTest {
                 .isEqualByComparingTo(BigDecimal.valueOf(89.97)); // 29.99 * 3
     }
 
+    /**
+     * Test case for handling cart items with null records or prices.
+     */
     @Test
     @DisplayName("Should handle cart item with null record or price")
     void shouldHandleCartItemWithNullRecordOrPrice() {
@@ -190,7 +211,7 @@ public class ShoppingCartRepositoryTest {
         // Assert
         assertThat(item.getSubtotal()).isEqualByComparingTo(BigDecimal.ZERO);
 
-        item.setRecord(new Record()); // Record without price
+        item.setRecord(new Record()); // Record without a price
         assertThat(item.getSubtotal()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 }

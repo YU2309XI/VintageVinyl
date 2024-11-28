@@ -31,6 +31,9 @@ class CartItemCountControllerAdviceTest {
         testUser.setUsername("testUser");
     }
 
+    /**
+     * Test case for retrieving cart item count for an authenticated user.
+     */
     @Test
     @DisplayName("Should return cart item count for authenticated user")
     void cartItemCount_AuthenticatedUser() {
@@ -41,6 +44,9 @@ class CartItemCountControllerAdviceTest {
         assertEquals(5, count);
     }
 
+    /**
+     * Test case for retrieving cart item count for an unauthenticated user.
+     */
     @Test
     @DisplayName("Should return zero for unauthenticated user")
     void cartItemCount_UnauthenticatedUser() {

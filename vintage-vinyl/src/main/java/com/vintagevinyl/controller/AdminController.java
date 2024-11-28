@@ -30,12 +30,20 @@ public class AdminController {
     @Autowired
     private RecordService recordService;
 
+    /**
+     * Admin console view - displays the list of users.
+     * Uses Thymeleaf to render the "admin-console" template with user data.
+     */
     @GetMapping
     public String adminConsole(Model model) {
         model.addAttribute("users", userService.getAll());
         return "admin-console";
     }
 
+    /**
+     * Set a user's role to Admin.
+     * Demonstrates the use of @RequestParam for capturing query parameters from HTTP POST requests.
+     */
     @PostMapping("/set-admin")
     @ResponseBody
     public ResponseEntity<String> setAdminRole(@RequestParam String username) {
@@ -47,6 +55,10 @@ public class AdminController {
         }
     }
 
+    /**
+     * Edit user details.
+     * Combines @PathVariable and @RequestBody for RESTful updates.
+     */
     @PostMapping("/users/{id}/edit")
     @ResponseBody
     public ResponseEntity<String> editUser(@PathVariable Long id,
@@ -60,6 +72,10 @@ public class AdminController {
         }
     }
 
+    /**
+     * Delete a user.
+     * Demonstrates exception handling with specific IllegalStateException for better error feedback.
+     */
     @PostMapping("/users/{id}/delete")
     @ResponseBody
     public ResponseEntity<String> deleteUser(@PathVariable Long id) {
@@ -73,6 +89,10 @@ public class AdminController {
         }
     }
 
+    /**
+     * Activate a user account.
+     * Uses @AuthenticationPrincipal to capture currently logged-in user details.
+     */
     @PostMapping("/users/{id}/activate")
     @ResponseBody
     public ResponseEntity<String> activateUser(@PathVariable Long id,
@@ -85,6 +105,9 @@ public class AdminController {
         }
     }
 
+    /**
+     * Deactivate a user account.
+     */
     @PostMapping("/users/{id}/deactivate")
     @ResponseBody
     public ResponseEntity<String> deactivateUser(@PathVariable Long id,
@@ -97,6 +120,9 @@ public class AdminController {
         }
     }
 
+    /**
+     * Lock a user account.
+     */
     @PostMapping("/users/{id}/lock")
     @ResponseBody
     public ResponseEntity<String> lockUser(@PathVariable Long id,
@@ -109,6 +135,9 @@ public class AdminController {
         }
     }
 
+    /**
+     * Unlock a user account.
+     */
     @PostMapping("/users/{id}/unlock")
     @ResponseBody
     public ResponseEntity<String> unlockUser(@PathVariable Long id,
@@ -122,27 +151,20 @@ public class AdminController {
     }
 
     /**
-     * Display inventory management page
+     * Display the inventory management page.
+     * Demonstrates the use of Spring Data's paging feature with PageRequest.
      */
     @GetMapping("/inventory")
     public String inventoryManagement(Model model) {
-        // Use PageRequest.of(0, Integer.MAX_VALUE) to retrieve all records
-        Page<Record> recordPage = recordService.getAllRecords(
-                PageRequest.of(0, Integer.MAX_VALUE),
-                ""
-        );
-
-        // Retrieve the list of all records
+        Page<Record> recordPage = recordService.getAllRecords(PageRequest.of(0, Integer.MAX_VALUE), "");
         List<Record> records = recordPage.getContent();
         model.addAttribute("records", records);
 
         // Calculate total stock
-        int totalStock = records.stream()
-                .mapToInt(Record::getStock)
-                .sum();
+        int totalStock = records.stream().mapToInt(Record::getStock).sum();
         model.addAttribute("totalStock", totalStock);
 
-        // Low stock and out of stock records
+        // Add low-stock and out-of-stock data
         model.addAttribute("lowStockRecords", recordService.getLowStockRecords());
         model.addAttribute("outOfStockRecords", recordService.getOutOfStockRecords());
         model.addAttribute("lowStockCount", recordService.getLowStockCount());
@@ -151,7 +173,8 @@ public class AdminController {
     }
 
     /**
-     * Update stock quantity for a record
+     * Update stock quantity for a specific record.
+     * Uses Spring's logging framework for auditing stock updates.
      */
     @PutMapping("/api/records/{id}/stock")
     @ResponseBody
@@ -159,10 +182,8 @@ public class AdminController {
             @PathVariable Long id,
             @RequestBody Map<String, Integer> request,
             @AuthenticationPrincipal UserDetails currentUser) {
-
         try {
-            logger.info("Stock update requested by {} for record {}",
-                    currentUser.getUsername(), id);
+            logger.info("Stock update requested by {} for record {}", currentUser.getUsername(), id);
 
             Integer quantity = request.get("quantity");
             if (quantity == null) {
@@ -179,14 +200,13 @@ public class AdminController {
     }
 
     /**
-     * Add stock to a record
+     * Add stock to a specific record.
      */
     @PostMapping("/api/records/{id}/stock/add")
     @ResponseBody
     public ResponseEntity<?> addStock(
             @PathVariable Long id,
             @RequestBody Map<String, Integer> request) {
-
         try {
             Integer quantity = request.get("quantity");
             if (quantity == null) {
@@ -203,7 +223,8 @@ public class AdminController {
     }
 
     /**
-     * Get low-stock records
+     * Get records with low stock.
+     * Demonstrates how to return a ResponseEntity with a generic type.
      */
     @GetMapping("/api/records/low-stock")
     @ResponseBody
@@ -212,7 +233,8 @@ public class AdminController {
     }
 
     /**
-     * Get inventory status dashboard data
+     * Get inventory status dashboard data.
+     * Uses Map.of to construct a lightweight response payload.
      */
     @GetMapping("/api/inventory/status")
     @ResponseBody
@@ -226,13 +248,12 @@ public class AdminController {
     }
 
     /**
-     * Batch update stock quantities
+     * Batch update stock quantities for multiple records.
      */
     @PutMapping("/api/records/stock/batch")
     @ResponseBody
     public ResponseEntity<?> batchUpdateStock(
             @RequestBody List<Map<String, Object>> updates) {
-
         try {
             for (Map<String, Object> update : updates) {
                 Long recordId = ((Number) update.get("id")).longValue();
@@ -248,7 +269,7 @@ public class AdminController {
     }
 
     /**
-     * Update a low stock threshold for a record
+     * Update the low stock threshold for a specific record.
      */
     @PutMapping("/api/records/{id}/threshold")
     @ResponseBody
@@ -256,10 +277,8 @@ public class AdminController {
             @PathVariable Long id,
             @RequestBody Map<String, Integer> request,
             @AuthenticationPrincipal UserDetails currentUser) {
-
         try {
-            logger.info("Threshold update requested by {} for record {}",
-                    currentUser.getUsername(), id);
+            logger.info("Threshold update requested by {} for record {}", currentUser.getUsername(), id);
 
             Integer threshold = request.get("threshold");
             if (threshold == null) {
@@ -275,6 +294,10 @@ public class AdminController {
         }
     }
 
+    /**
+     * Handle exceptions globally for the admin controller.
+     * Ensures consistent error responses across all endpoints.
+     */
     @ExceptionHandler(Exception.class)
     @ResponseBody
     public ResponseEntity<String> handleException(Exception e) {

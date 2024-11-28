@@ -57,6 +57,9 @@ public class WishlistRepositoryTest {
         entityManager.flush();
     }
 
+    /**
+     * Test case for saving and retrieving a wishlist.
+     */
     @Test
     @DisplayName("Should save and retrieve a wishlist")
     void shouldSaveAndRetrieveWishlist() {
@@ -75,6 +78,9 @@ public class WishlistRepositoryTest {
                 });
     }
 
+    /**
+     * Test case for finding a wishlist by user.
+     */
     @Test
     @DisplayName("Should find wishlist by user")
     void shouldFindWishlistByUser() {
@@ -93,6 +99,9 @@ public class WishlistRepositoryTest {
                 });
     }
 
+    /**
+     * Test case for managing wishlist items.
+     */
     @Test
     @DisplayName("Should manage wishlist items")
     void shouldManageWishlistItems() {
@@ -124,6 +133,9 @@ public class WishlistRepositoryTest {
                 });
     }
 
+    /**
+     * Test case for handling an empty wishlist.
+     */
     @Test
     @DisplayName("Should handle empty wishlist")
     void shouldHandleEmptyWishlist() {
@@ -138,6 +150,9 @@ public class WishlistRepositoryTest {
         assertThat(savedWishlist.getItems()).isEmpty();
     }
 
+    /**
+     * Test case for handling item removal at invalid indices.
+     */
     @Test
     @DisplayName("Should handle item removal at invalid index")
     void shouldHandleInvalidItemRemoval() {
@@ -153,6 +168,9 @@ public class WishlistRepositoryTest {
         assertThat(wishlist.getItems()).hasSize(originalSize);
     }
 
+    /**
+     * Test case for handling non-existent wishlists.
+     */
     @Test
     @DisplayName("Should find non-existent wishlist")
     void shouldHandleNonExistentWishlist() {
@@ -170,6 +188,9 @@ public class WishlistRepositoryTest {
         assertThat(wishlistRepository.findById(999L)).isEmpty();
     }
 
+    /**
+     * Test case for handling duplicate items in a wishlist.
+     */
     @Test
     @DisplayName("Should handle duplicate items")
     void shouldHandleDuplicateItems() {

@@ -143,7 +143,7 @@ public class InventoryManagementIntegrationTest {
         // First set a lower stock
         recordService.updateStock(testRecord.getId(), 7);
 
-        // Then update threshold to trigger low stock state
+        // Then update a threshold to trigger low stock state
         recordService.updateLowStockThreshold(testRecord.getId(), 8);
 
         Record updatedRecord = recordService.getRecordById(testRecord.getId());

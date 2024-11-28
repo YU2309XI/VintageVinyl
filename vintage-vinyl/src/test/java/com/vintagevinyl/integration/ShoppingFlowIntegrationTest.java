@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@Transactional
+@Transactional // This rolls back changes after each test
 public class ShoppingFlowIntegrationTest {
 
     @Autowired
@@ -53,10 +53,9 @@ public class ShoppingFlowIntegrationTest {
         user.setPassword("password123");
         user.setEnabled(true);
         user.setAccountNonLocked(true);
-        // 使用 addRole 方法而不是直接设置 roles
         user.addRole("USER");
 
-        testUser = userService.save(user);  // 直接使用 save 而不是 registerNewUser
+        testUser = userService.save(user);
 
         // Create test record
         Record record = new Record();
@@ -154,7 +153,7 @@ public class ShoppingFlowIntegrationTest {
         ShoppingCart cart = cartService.getCart(testUser);
         assertEquals(2, cart.getItems().size(), "Cart should contain two items");
 
-        // Calculate expected total
+        // Calculate the expected total
         BigDecimal expectedTotal = testRecord.getPrice()
                 .multiply(new BigDecimal("2"))
                 .add(secondRecord.getPrice());

@@ -56,6 +56,9 @@ public class RecordRepositoryTest {
         return record;
     }
 
+    /**
+     * Test case for saving and retrieving a record.
+     */
     @Test
     @DisplayName("Should save and retrieve a record")
     void shouldSaveAndRetrieveRecord() {
@@ -73,6 +76,9 @@ public class RecordRepositoryTest {
                 });
     }
 
+    /**
+     * Test case for finding records by title or artist containing a search term.
+     */
     @Test
     @DisplayName("Should find records by title or artist containing search term")
     void shouldFindByTitleOrArtistContaining() {
@@ -97,6 +103,9 @@ public class RecordRepositoryTest {
                 .containsOnly("The Beatles");
     }
 
+    /**
+     * Test case for finding records with low stock.
+     */
     @Test
     @DisplayName("Should find low stock records")
     void shouldFindLowStockRecords() {
@@ -117,6 +126,9 @@ public class RecordRepositoryTest {
                 .allMatch(stock -> stock <= 5);
     }
 
+    /**
+     * Test case for finding the records below or equal to a stock threshold.
+     */
     @Test
     @DisplayName("Should find records by stock threshold")
     void shouldFindByStockThreshold() {
@@ -137,6 +149,9 @@ public class RecordRepositoryTest {
                 .allMatch(stock -> stock <= 4);
     }
 
+    /**
+     * Test case for finding records that are out of stock.
+     */
     @Test
     @DisplayName("Should find out of stock records")
     void shouldFindOutOfStockRecords() {
@@ -156,6 +171,9 @@ public class RecordRepositoryTest {
                 .containsOnly(0);
     }
 
+    /**
+     * Test case for updating stock quantity of a record.
+     */
     @Test
     @DisplayName("Should update stock quantity")
     @Transactional
@@ -174,6 +192,9 @@ public class RecordRepositoryTest {
         assertThat(updatedRecord.getStock()).isEqualTo(100);
     }
 
+    /**
+     * Test case for counting the number of low stock records.
+     */
     @Test
     @DisplayName("Should count low stock records")
     void shouldCountLowStockRecords() {
@@ -191,6 +212,9 @@ public class RecordRepositoryTest {
         assertThat(count).isEqualTo(2);
     }
 
+    /**
+     * Test case for finding records needing restocking, ordered by stock levels.
+     */
     @Test
     @DisplayName("Should find records needing restock ordered by stock")
     void shouldFindRecordsNeedingRestock() {
@@ -211,6 +235,9 @@ public class RecordRepositoryTest {
                 .isSortedAccordingTo(Integer::compareTo);
     }
 
+    /**
+     * Test case for finding records within a specific stock range.
+     */
     @Test
     @DisplayName("Should find records with stock between range")
     void shouldFindRecordsByStockRange() {
@@ -232,6 +259,9 @@ public class RecordRepositoryTest {
                 .allMatch(stock -> stock >= 3 && stock <= 7);
     }
 
+    /**
+     * Test case for handling pagination while fetching records.
+     */
     @Test
     @DisplayName("Should handle pagination correctly")
     void shouldHandlePaginationCorrectly() {
@@ -266,6 +296,9 @@ public class RecordRepositoryTest {
         assertThat(firstPage.getTotalPages()).isEqualTo(3);
     }
 
+    /**
+     * Test case for handling-edge cases such as max and zero stocks.
+     */
     @Test
     @DisplayName("Should handle edge cases")
     void shouldHandleEdgeCases() {
@@ -296,6 +329,9 @@ public class RecordRepositoryTest {
                 .containsExactly("Max Stock");
     }
 
+    /**
+     * Test case for handling invalid search terms such as empty or null strings.
+     */
     @Test
     @DisplayName("Should handle invalid search terms")
     void shouldHandleInvalidSearchTerms() {
@@ -316,5 +352,4 @@ public class RecordRepositoryTest {
         assertThat(emptyResult).isEmpty();
         assertThat(nullResult).isEmpty();
     }
-
 }

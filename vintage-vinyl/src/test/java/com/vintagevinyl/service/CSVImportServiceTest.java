@@ -46,6 +46,9 @@ class CSVImportServiceTest {
         validCsvRecord = "Test Track,Test Artist,Test Album,2024-01-01,https://example.com/cover.jpg,Rock,29.99\n";
     }
 
+    /**
+     * Test case for importing valid CSV data successfully.
+     */
     @Test
     @DisplayName("Should import valid CSV data successfully")
     void importCSVData_ValidData_Success() throws IOException {
@@ -72,6 +75,9 @@ class CSVImportServiceTest {
         assertEquals(new BigDecimal("29.99"), importedRecord.getPrice());
     }
 
+    /**
+     * Test case for importing multiple records successfully.
+     */
     @Test
     @DisplayName("Should import multiple records successfully")
     void importCSVData_MultipleRecords_Success() throws IOException {
@@ -91,6 +97,9 @@ class CSVImportServiceTest {
         assertEquals(2, recordsCaptor.getValue().size());
     }
 
+    /**
+     * Test case for handling invalid date format.
+     */
     @Test
     @DisplayName("Should handle invalid date format")
     void importCSVData_InvalidDate_UsesCurrentDate() throws IOException {
@@ -110,6 +119,9 @@ class CSVImportServiceTest {
         assertEquals(LocalDate.now(), importedRecord.getReleaseDate());
     }
 
+    /**
+     * Test case for handling an empty CSV file.
+     */
     @Test
     @DisplayName("Should handle empty CSV file")
     void importCSVData_EmptyFile_ImportZeroRecords() throws IOException {
@@ -126,6 +138,9 @@ class CSVImportServiceTest {
         assertTrue(recordsCaptor.getValue().isEmpty());
     }
 
+    /**
+     * Test case for continuing import when one record fails.
+     */
     @Test
     @DisplayName("Should continue import when one record fails")
     void importCSVData_OneRecordFails_ContinuesWithOthers() throws IOException {
@@ -146,6 +161,9 @@ class CSVImportServiceTest {
         assertEquals(2, recordsCaptor.getValue().size());
     }
 
+    /**
+     * Test case for handling missing optional fields.
+     */
     @Test
     @DisplayName("Should handle missing optional fields")
     void importCSVData_MissingOptionalFields_Success() throws IOException {
@@ -166,11 +184,14 @@ class CSVImportServiceTest {
         assertEquals("", importedRecord.getCoverImageUrl());
     }
 
+    /**
+     * Test case for handling a corrupted CSV file.
+     */
     @Test
     @DisplayName("Should throw UncheckedIOException when CSV file is corrupted")
     void importCSVData_CorruptedCSV_ThrowsException() {
         // Given
-        String invalidCsvData = "Track Name,Artist\n\"Unclosed quote,Test Artist\nNext Line";  // 引号未闭合的错误数据
+        String invalidCsvData = "Track Name,Artist\n\"Unclosed quote,Test Artist\nNext Line";
         InputStream inputStream = new ByteArrayInputStream(invalidCsvData.getBytes(StandardCharsets.UTF_8));
 
         // When & Then
@@ -178,6 +199,9 @@ class CSVImportServiceTest {
         verify(recordRepository, never()).saveAll(anyList());
     }
 
+    /**
+     * Test case for handling UTF-8 characters in CSV.
+     */
     @Test
     @DisplayName("Should handle UTF-8 characters")
     void importCSVData_UTF8Characters_Success() throws IOException {

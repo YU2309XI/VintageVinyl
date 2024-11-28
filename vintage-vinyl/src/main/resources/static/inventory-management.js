@@ -1,21 +1,29 @@
 $(document).ready(function() {
-    // CSRF setup
+    // CSRF Token setup for secure AJAX requests
     const token = $("meta[name='_csrf']").attr("content");
     const header = $("meta[name='_csrf_header']").attr("content");
 
+    // Attach CSRF token to all AJAX requests
     $(document).ajaxSend(function(e, xhr, options) {
         xhr.setRequestHeader(header, token);
     });
 
-    // Periodic inventory status refresh
+    /**
+     * Periodically refresh inventory status on the admin dashboard.
+     */
     function refreshInventoryStatus() {
         $.get('/admin/api/inventory/status')
             .done(function(data) {
-                updateDashboardCards(data);
-                updateLowStockAlerts(data.lowStockRecords);
+                updateDashboardCards(data); // Update key inventory stats on the dashboard
+                updateLowStockAlerts(data.lowStockRecords); // Update low stock alerts
             });
     }
 
+    /**
+     * Update dashboard cards with inventory statistics.
+     *
+     * @param {Object} data - The inventory data object.
+     */
     function updateDashboardCards(data) {
         $('.card-text').eq(0).text(data.totalItems);
         $('.card-text').eq(1).text(data.lowStockCount);
@@ -23,10 +31,12 @@ $(document).ready(function() {
         $('.card-text').eq(3).text(data.totalStock);
     }
 
-    // Refresh every 5 minutes
+    // Refresh inventory status every 5 minutes
     setInterval(refreshInventoryStatus, 300000);
 
-    // Single record stock update
+    /**
+     * Handle single record stock update when the update button is clicked.
+     */
     $('.update-stock').click(function() {
         const recordId = $(this).data('id');
         const title = $(this).data('title');
@@ -62,7 +72,9 @@ $(document).ready(function() {
             });
     });
 
-    // Batch update functionality
+    /**
+     * Batch update functionality for multiple records.
+     */
     $('#selectAll').change(function() {
         $('.record-select').prop('checked', $(this).is(':checked'));
         updateBatchUpdateButtonState();
@@ -140,7 +152,9 @@ $(document).ready(function() {
             });
     });
 
-    // Low stock threshold update
+    /**
+     * Update a low stock threshold for individual records.
+     */
     let thresholdUpdateTimeout;
     $('.threshold-input').change(function() {
         const $input = $(this);
@@ -171,7 +185,9 @@ $(document).ready(function() {
         }, 500);
     });
 
-    // Export inventory report
+    /**
+     * Export inventory report to a CSV file.
+     */
     window.exportInventory = function() {
         const data = [];
         $('#inventoryTable tbody tr').each(function() {
@@ -191,7 +207,7 @@ $(document).ready(function() {
             csv += `"${item.title}","${item.artist}",${item.currentStock},${item.threshold},"${item.status}"\n`;
         });
 
-        // Create download link
+        // Create a download link
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
@@ -203,7 +219,9 @@ $(document).ready(function() {
         document.body.removeChild(link);
     };
 
-    // Search/filter functionality
+    /**
+     * Search and filter inventory table rows based on user input.
+     */
     $('#inventorySearch').on('input', function() {
         const searchTerm = $(this).val().toLowerCase();
         $('#inventoryTable tbody tr').each(function() {
@@ -213,10 +231,10 @@ $(document).ready(function() {
         });
     });
 
-    // Initialize tooltips
+    // Initialize tooltips for the page
     $('[data-toggle="tooltip"]').tooltip();
 
-    // Initialize state
+    // Initialize page state
     updateBatchUpdateButtonState();
     refreshInventoryStatus();
 });

@@ -78,6 +78,9 @@ class AuthControllerTest {
     @DisplayName("Public Access Tests")
     class PublicAccessTests {
 
+        /**
+         * Test case for accessing the home page.
+         */
         @Test
         @WithAnonymousUser
         @DisplayName("Should access home page")
@@ -87,6 +90,9 @@ class AuthControllerTest {
                     .andExpect(redirectedUrl("/dashboard"));
         }
 
+        /**
+         * Test case for displaying the registration form.
+         */
         @Test
         @WithAnonymousUser
         @DisplayName("Should show registration form")
@@ -97,6 +103,9 @@ class AuthControllerTest {
                     .andExpect(model().attributeExists("user"));
         }
 
+        /**
+         * Test case for successfully registering a new user.
+         */
         @Test
         @WithAnonymousUser
         @DisplayName("Should register new user successfully")
@@ -113,6 +122,9 @@ class AuthControllerTest {
                     .andExpect(flash().attributeExists("message"));
         }
 
+        /**
+         * Test case for handling an already existing user during registration.
+         */
         @Test
         @WithAnonymousUser
         @DisplayName("Should handle user already exists during registration")
@@ -130,6 +142,9 @@ class AuthControllerTest {
                     .andExpect(model().attributeExists("error"));
         }
 
+        /**
+         * Test case for displaying the login form.
+         */
         @Test
         @WithAnonymousUser
         @DisplayName("Should show login form")
@@ -139,6 +154,9 @@ class AuthControllerTest {
                     .andExpect(view().name("login"));
         }
 
+        /**
+         * Test case for displaying the login form with an error message.
+         */
         @Test
         @WithAnonymousUser
         @DisplayName("Should show login form with error")
@@ -154,6 +172,9 @@ class AuthControllerTest {
     @DisplayName("Authenticated User Tests")
     class AuthenticatedUserTests {
 
+        /**
+         * Test case for displaying the user dashboard.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should display dashboard")
@@ -168,6 +189,9 @@ class AuthControllerTest {
                     .andExpect(model().attributeExists("username", "userRoles", "recentOrders"));
         }
 
+        /**
+         * Test case for viewing user orders.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should display orders")
@@ -182,6 +206,9 @@ class AuthControllerTest {
                     .andExpect(model().attributeExists("orders"));
         }
 
+        /**
+         * Test case for managing user account.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should display account management")
@@ -194,6 +221,9 @@ class AuthControllerTest {
                     .andExpect(model().attributeExists("user"));
         }
 
+        /**
+         * Test case for successfully updating user account details.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should update account successfully")
@@ -209,6 +239,9 @@ class AuthControllerTest {
                     .andExpect(flash().attributeExists("message"));
         }
 
+        /**
+         * Test case for updating user account with password change.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should update account with password change")
@@ -233,6 +266,9 @@ class AuthControllerTest {
     @DisplayName("Wishlist Tests")
     class WishlistTests {
 
+        /**
+         * Test case for viewing the wishlist.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should display wishlist")
@@ -246,6 +282,9 @@ class AuthControllerTest {
                     .andExpect(model().attributeExists("wishlist"));
         }
 
+        /**
+         * Test case for adding an item to the wishlist.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should add item to wishlist")
@@ -262,6 +301,9 @@ class AuthControllerTest {
                     .andExpect(flash().attributeExists("message"));
         }
 
+        /**
+         * Test case for removing an item from the wishlist.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should remove item from wishlist")

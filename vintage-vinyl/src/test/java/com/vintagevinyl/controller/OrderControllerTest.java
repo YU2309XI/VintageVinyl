@@ -34,12 +34,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@SpringBootTest // Full application context
+@AutoConfigureMockMvc // Enable MockMvc for HTTP testing
 class OrderControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private MockMvc mockMvc; // This helps us simulate HTTP requests
 
     @MockBean
     private OrderService orderService;
@@ -82,20 +82,25 @@ class OrderControllerTest {
     @Nested
     @DisplayName("Checkout Process Tests")
     class CheckoutTests {
-
+        /**
+         * Test case for showing the checkout form.
+         */
         @Test
-        @WithMockUser(username = "testUser")
+        @WithMockUser(username = "testUser")  // This simulates a logged-in user
         @DisplayName("Should show checkout form")
         void showCheckoutForm_Success() throws Exception {
             when(userService.findByUsername("testUser")).thenReturn(testUser);
             when(shoppingCartService.getCart(testUser)).thenReturn(testCart);
 
-            mockMvc.perform(get("/checkout"))
+            mockMvc.perform(get("/checkout")) // Sending a POST request to /checkout
                     .andExpect(status().isOk())
                     .andExpect(view().name("checkout"))
                     .andExpect(model().attributeExists("cart"));
         }
 
+        /**
+         * Test case for successfully processing a checkout.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should process checkout successfully")
@@ -106,7 +111,7 @@ class OrderControllerTest {
                     .thenReturn(1L);
 
             mockMvc.perform(post("/checkout")
-                            .with(csrf())
+                            .with(csrf()) // Adding CSRF token for security
                             .param("shippingAddress", "123 Test St")
                             .param("paymentMethod", "CREDIT_CARD"))
                     .andExpect(status().is3xxRedirection())
@@ -115,6 +120,9 @@ class OrderControllerTest {
             verify(shoppingCartService).clearCart(testUser);
         }
 
+        /**
+         * Test case for handling errors during checkout.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should handle checkout error")
@@ -136,7 +144,9 @@ class OrderControllerTest {
     @Nested
     @DisplayName("Order View Tests")
     class OrderViewTests {
-
+        /**
+         * Test case for viewing order details as a user.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should show order details to user")
@@ -150,6 +160,9 @@ class OrderControllerTest {
                     .andExpect(model().attributeExists("order"));
         }
 
+        /**
+         * Test case for viewing order details as an admin.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should show order details to admin")
@@ -162,6 +175,9 @@ class OrderControllerTest {
                     .andExpect(model().attributeExists("order"));
         }
 
+        /**
+         * Test case for handling 'order not found' scenario.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should handle order not found")
@@ -180,6 +196,9 @@ class OrderControllerTest {
     @DisplayName("Admin Order Management Tests")
     class AdminOrderTests {
 
+        /**
+         * Test case for listing all orders for admin.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should list all orders for admin")
@@ -193,6 +212,9 @@ class OrderControllerTest {
                     .andExpect(model().attributeExists("orders"));
         }
 
+        /**
+         * Test case for viewing order details in admin view.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should show order details in admin view")
@@ -205,6 +227,9 @@ class OrderControllerTest {
                     .andExpect(model().attributeExists("order"));
         }
 
+        /**
+         * Test case for updating the status of an order.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should update order status")
@@ -219,6 +244,9 @@ class OrderControllerTest {
                     .andExpect(flash().attributeExists("message"));
         }
 
+        /**
+         * Test case for handling errors during order status updates.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should handle order status update error")
@@ -234,6 +262,9 @@ class OrderControllerTest {
                     .andExpect(flash().attributeExists("error"));
         }
 
+        /**
+         * Test case for deleting an order as an admin.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should delete order")
@@ -252,6 +283,9 @@ class OrderControllerTest {
     @DisplayName("Order Management Tests")
     class OrderManagementTests {
 
+        /**
+         * Test case for canceling an order as a user.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should cancel order as user")
@@ -266,6 +300,9 @@ class OrderControllerTest {
                     .andExpect(flash().attributeExists("message"));
         }
 
+        /**
+         * Test case for canceling an order as an admin.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should cancel order as admin")
@@ -280,6 +317,9 @@ class OrderControllerTest {
                     .andExpect(flash().attributeExists("message"));
         }
 
+        /**
+         * Test case for handling errors during order cancellation.
+         */
         @Test
         @WithMockUser(username = "testUser")
         @DisplayName("Should handle order cancellation error")

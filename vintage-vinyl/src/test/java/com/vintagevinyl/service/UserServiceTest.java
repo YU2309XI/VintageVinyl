@@ -40,6 +40,12 @@ class UserServiceTest {
     private User testUser;
     private User adminUser;
 
+    /**
+     * Sets up test data before each test.
+     * Creates two users:
+     * 1. A regular user with ROLE_USER
+     * 2. An admin user with ROLE_ADMIN
+     */
     @BeforeEach
     void setUp() {
         // Initialize test user
@@ -63,6 +69,10 @@ class UserServiceTest {
         adminUser.addRole("ROLE_ADMIN");
     }
 
+    /**
+     * Test case: Loading a user by username should succeed when a user exists
+     * Expected: Returns UserDetails with the correct username
+     */
     @Test
     @DisplayName("Should load user by username successfully")
     void loadUserByUsername_Success() {
@@ -78,6 +88,10 @@ class UserServiceTest {
         verify(userRepository).findByUsername("tester");
     }
 
+    /**
+     * Test case: Loading a non-existent user should fail
+     * Expected: Throws UsernameNotFoundException
+     */
     @Test
     @DisplayName("Should throw UsernameNotFoundException when user not found")
     void loadUserByUsername_UserNotFound() {
@@ -89,6 +103,10 @@ class UserServiceTest {
                 () -> userService.loadUserByUsername("nonexistent"));
     }
 
+    /**
+     * Test case: Loading a disabled user should fail
+     * Expected: Throws DisabledException
+     */
     @Test
     @DisplayName("Should throw DisabledException when user is disabled")
     void loadUserByUsername_UserDisabled() {
@@ -101,6 +119,10 @@ class UserServiceTest {
                 () -> userService.loadUserByUsername("tester"));
     }
 
+    /**
+     * Test case: Loading a locked user should fail
+     * Expected: Throws LockedException
+     */
     @Test
     @DisplayName("Should throw LockedException when user is locked")
     void loadUserByUsername_UserLocked() {
@@ -113,6 +135,10 @@ class UserServiceTest {
                 () -> userService.loadUserByUsername("tester"));
     }
 
+    /**
+     * Test case: Registering a new user with unique username and email
+     * Expected: Returns saved user with default settings and ROLE_USER
+     */
     @Test
     @DisplayName("Should register new user successfully")
     void registerNewUser_Success() {
@@ -139,6 +165,10 @@ class UserServiceTest {
         verify(userRepository).save(any(User.class));
     }
 
+    /**
+     * Test case: Registering a user with existing username
+     * Expected: Throws UserAlreadyExistsException
+     */
     @Test
     @DisplayName("Should throw exception when username already exists")
     void registerNewUser_UsernameExists() {
@@ -154,6 +184,10 @@ class UserServiceTest {
                 () -> userService.registerNewUser(newUser));
     }
 
+    /**
+     * Test case: Activating a disabled user
+     * Expected: Returns user with enabled status and updated modifier
+     */
     @Test
     @DisplayName("Should activate user successfully")
     void activateUser_Success() {
@@ -171,6 +205,10 @@ class UserServiceTest {
         verify(userRepository).save(testUser);
     }
 
+    /**
+     * Test case: Deactivating an active user
+     * Expected: Returns user with disabled status and updated modifier
+     */
     @Test
     @DisplayName("Should deactivate user successfully")
     void deactivateUser_Success() {
@@ -187,6 +225,10 @@ class UserServiceTest {
         verify(userRepository).save(testUser);
     }
 
+    /**
+     * Test case: Attempting to deactivate the last admin user
+     * Expected: Throws IllegalStateException to prevent a system from having no admins
+     */
     @Test
     @DisplayName("Should not deactivate last admin user")
     void deactivateUser_LastAdmin() {
@@ -199,6 +241,10 @@ class UserServiceTest {
                 () -> userService.deactivateUser(2L, "admin"));
     }
 
+    /**
+     * Test case: Locking an active user account
+     * Expected: Returns user with locked status and updated modifier
+     */
     @Test
     @DisplayName("Should lock user successfully")
     void lockUser_Success() {
@@ -215,6 +261,10 @@ class UserServiceTest {
         verify(userRepository).save(testUser);
     }
 
+    /**
+     * Test case: Attempting to lock the last admin user
+     * Expected: Throws IllegalStateException to prevent a system from having no active admins
+     */
     @Test
     @DisplayName("Should not lock last admin user")
     void lockUser_LastAdmin() {
@@ -227,6 +277,10 @@ class UserServiceTest {
                 () -> userService.lockUser(2L, "admin"));
     }
 
+    /**
+     * Test case: Unlocking a locked user account
+     * Expected: Returns user with unlocked status and updated modifier
+     */
     @Test
     @DisplayName("Should unlock user successfully")
     void unlockUser_Success() {
@@ -244,6 +298,10 @@ class UserServiceTest {
         verify(userRepository).save(testUser);
     }
 
+    /**
+     * Test case: Updating user details with valid information
+     * Expected: Returns user with updated email and password
+     */
     @Test
     @DisplayName("Should update user successfully")
     void updateUser_Success() {
@@ -267,6 +325,10 @@ class UserServiceTest {
         verify(userRepository).save(testUser);
     }
 
+    /**
+     * Test case: Changing user password with correct current password
+     * Expected: Updates password successfully
+     */
     @Test
     @DisplayName("Should change password successfully")
     void changeUserPassword_Success() {
@@ -282,6 +344,10 @@ class UserServiceTest {
         verify(userRepository).save(testUser);
     }
 
+    /**
+     * Test case: Attempting to change password with incorrect current password
+     * Expected: Throws IllegalArgumentException
+     */
     @Test
     @DisplayName("Should throw exception when current password is incorrect")
     void changeUserPassword_IncorrectCurrentPassword() {
@@ -293,6 +359,10 @@ class UserServiceTest {
                 () -> userService.changeUserPassword(testUser, "wrongPassword", "newPassword"));
     }
 
+    /**
+     * Test case: Finding all active users in the system
+     * Expected: Returns list of enabled users
+     */
     @Test
     @DisplayName("Should find active users")
     void findActiveUsers_Success() {
@@ -308,6 +378,10 @@ class UserServiceTest {
         verify(userRepository).findByEnabled(true);
     }
 
+    /**
+     * Test case: Finding all locked users in the system
+     * Expected: Returns list of locked users
+     */
     @Test
     @DisplayName("Should find locked users")
     void findLockedUsers_Success() {
@@ -324,6 +398,10 @@ class UserServiceTest {
         verify(userRepository).findByAccountNonLocked(false);
     }
 
+    /**
+     * Test case: Checking if user is the last active admin
+     * Expected: Returns true when only one active admin exists
+     */
     @Test
     @DisplayName("Should check if user is last active admin")
     void isLastActiveAdmin_True() {

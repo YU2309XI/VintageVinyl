@@ -18,9 +18,15 @@ import java.util.List;
 import java.util.Optional;
 import java.math.BigDecimal;
 
-
+/**
+ * Service class for managing shopping cart operations.
+ *
+ * This class provides methods to add, update, remove items from the cart,
+ * calculate totals, validate cart items, and manage cart data persistence.
+ */
 @Service
 public class ShoppingCartService {
+
     private static final Logger logger = LoggerFactory.getLogger(ShoppingCartService.class);
 
     @Autowired
@@ -29,6 +35,15 @@ public class ShoppingCartService {
     @Autowired
     private RecordRepository recordRepository;
 
+    /**
+     * Adds an item to the user's shopping cart.
+     *
+     * @param user the user who owns the cart
+     * @param recordId the ID of the record to add
+     * @param quantity the quantity of the record
+     * @throws IllegalArgumentException if quantity is invalid
+     * @throws IllegalStateException if stock is insufficient
+     */
     @Transactional
     public void addItemToCart(User user, Long recordId, int quantity) {
         if (quantity < 1) {
@@ -40,10 +55,10 @@ public class ShoppingCartService {
 
         try {
             ShoppingCart cart = getOrCreateCart(user);
-            com.vintagevinyl.model.Record record = recordRepository.findById(recordId)
+            Record record = recordRepository.findById(recordId)
                     .orElseThrow(() -> new RecordNotFoundException("Record not found with id: " + recordId));
 
-            // Add stock check here
+            // Check stock availability
             if (record.getStock() < quantity) {
                 throw new IllegalStateException("Insufficient stock for record: " + record.getTitle());
             }
@@ -69,6 +84,12 @@ public class ShoppingCartService {
         }
     }
 
+    /**
+     * Gets the user's shopping cart, creating a new one if it does not exist.
+     *
+     * @param user the user whose cart is being accessed
+     * @return the shopping cart
+     */
     @Transactional
     public ShoppingCart getOrCreateCart(User user) {
         logger.debug("Getting or creating cart for user: {}", user.getUsername());
@@ -81,6 +102,12 @@ public class ShoppingCartService {
                 });
     }
 
+    /**
+     * Retrieves the user's shopping cart, initializing its items.
+     *
+     * @param user the user whose cart is being accessed
+     * @return the initialized shopping cart
+     */
     @Transactional(readOnly = true)
     public ShoppingCart getCart(User user) {
         ShoppingCart cart = shoppingCartRepository.findByUser(user)
@@ -90,11 +117,17 @@ public class ShoppingCartService {
                     return shoppingCartRepository.save(newCart);
                 });
 
-        // Force collection initialization
+        // Initialize cart items
         cart.getItems().size();
         return cart;
     }
 
+    /**
+     * Removes an item from the user's cart.
+     *
+     * @param user the user whose cart is being modified
+     * @param recordId the ID of the record to remove
+     */
     @Transactional
     public void removeItemFromCart(User user, Long recordId) {
         ShoppingCart cart = getOrCreateCart(user);
@@ -102,16 +135,25 @@ public class ShoppingCartService {
         shoppingCartRepository.save(cart);
     }
 
+    /**
+     * Clears all items from the user's cart.
+     *
+     * @param user the user whose cart is being cleared
+     */
     @Transactional
     public void clearCart(User user) {
         ShoppingCart cart = getOrCreateCart(user);
-        // Use removeIf instead of clear() to ensure proper cascade delete
         cart.getItems().removeIf(item -> true);
         shoppingCartRepository.save(cart);
-        // Force session flush
         shoppingCartRepository.flush();
     }
 
+    /**
+     * Calculates the total cost of the items in the user's cart.
+     *
+     * @param user the user whose cart total is being calculated
+     * @return the total cost as a BigDecimal
+     */
     @Transactional(readOnly = true)
     public BigDecimal calculateCartTotal(User user) {
         ShoppingCart cart = getCart(user);
@@ -120,14 +162,18 @@ public class ShoppingCartService {
         }
 
         return cart.getItems().stream()
-                .map(item -> {
-                    BigDecimal itemPrice = item.getRecord().getPrice();
-                    int itemQuantity = item.getQuantity();
-                    return itemPrice.multiply(new BigDecimal(itemQuantity));
-                })
+                .map(item -> item.getRecord().getPrice().multiply(new BigDecimal(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    /**
+     * Updates the quantity of an item in the user's cart.
+     *
+     * @param user the user whose cart is being updated
+     * @param recordId the ID of the record
+     * @param quantity the new quantity
+     * @throws IllegalArgumentException if quantity is invalid
+     */
     @Transactional
     public void updateCartItemQuantity(User user, Long recordId, int quantity) {
         if (quantity < 1) {
@@ -150,6 +196,11 @@ public class ShoppingCartService {
         }
     }
 
+    /**
+     * Validates the items in the user's cart, removing invalid items.
+     *
+     * @param user the user whose cart is being validated
+     */
     @Transactional
     public void validateCartItems(User user) {
         ShoppingCart cart = getCart(user);
@@ -164,6 +215,12 @@ public class ShoppingCartService {
         }
     }
 
+    /**
+     * Counts the total number of items in the user's cart.
+     *
+     * @param user the user whose cart is being counted
+     * @return the total number of items
+     */
     @Transactional
     public int getCartItemCount(User user) {
         ShoppingCart cart = getOrCreateCart(user);
@@ -172,7 +229,11 @@ public class ShoppingCartService {
                 .sum();
     }
 
-
+    /**
+     * Removes all cart items referencing a specific record from all carts.
+     *
+     * @param recordId the ID of the record to remove
+     */
     @Transactional
     public void removeAllCartItemsForRecord(Long recordId) {
         List<ShoppingCart> carts = shoppingCartRepository.findAll();

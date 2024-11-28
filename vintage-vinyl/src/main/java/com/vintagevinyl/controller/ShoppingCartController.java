@@ -20,6 +20,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 
+/**
+ * Controller for managing shopping cart operations.
+ * This includes adding, removing, viewing, and clearing cart items, as well as calculating totals.
+ */
 @Controller
 @RequestMapping("/cart")
 public class ShoppingCartController {
@@ -31,26 +35,36 @@ public class ShoppingCartController {
     @Autowired
     private ShoppingCartService shoppingCartService;
 
-    @Transactional
+    /**
+     * Display the shopping cart for the authenticated user.
+     * Ensures that cart items are fully loaded to avoid lazy initialization exceptions in the view.
+     */
+    @Transactional // Ensures the database session is active during lazy loading of cart items.
     @GetMapping
     public String viewCart(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         if (userDetails == null) {
-            return "redirect:/login";
+            return "redirect:/login"; // Redirect unauthenticated users to the login page.
         }
 
+        // Fetch the authenticated user from the database.
         User user = userService.findByUsername(userDetails.getUsername());
         if (user == null) {
             logger.error("User not found in database");
             return "redirect:/login";
         }
 
+        // Retrieve the user's shopping cart and initialize lazy-loaded items.
         ShoppingCart cart = shoppingCartService.getCart(user);
-        cart.getItems().forEach(item -> item.getRecord().getTitle());
+        cart.getItems().forEach(item -> item.getRecord().getTitle()); // Ensures cart items are loaded.
 
-        model.addAttribute("cart", cart);
-        return "cart";
+        model.addAttribute("cart", cart); // Pass the cart to the view for rendering.
+        return "cart"; // Return the cart view.
     }
 
+    /**
+     * Add a record to the user's shopping cart.
+     * Redirects to the wishlist after adding the item, ensuring that changes are reflected immediately.
+     */
     @PostMapping("/add")
     public String addToCart(@AuthenticationPrincipal UserDetails userDetails,
                             @RequestParam("recordId") Long recordId,
@@ -59,7 +73,7 @@ public class ShoppingCartController {
         logger.debug("Received add to cart request: recordId={}, quantity={}", recordId, quantity);
 
         if (userDetails == null) {
-            return "redirect:/login";
+            return "redirect:/login"; // Only authenticated users can add to cart.
         }
 
         try {
@@ -70,9 +84,8 @@ public class ShoppingCartController {
                 return "redirect:/wishlist";
             }
 
-            logger.info("Adding item to cart: userId={}, recordId={}, quantity={}", user.getId(), recordId, quantity);
+            // Add the specified record to the user's cart with the given quantity.
             shoppingCartService.addItemToCart(user, recordId, quantity);
-            logger.info("Item added to cart successfully");
             redirectAttributes.addFlashAttribute("message", "Item added to cart successfully");
         } catch (Exception e) {
             logger.error("Error adding item to cart", e);
@@ -81,6 +94,10 @@ public class ShoppingCartController {
         return "redirect:/wishlist";
     }
 
+    /**
+     * Remove an item from the user's shopping cart.
+     * Handles any exceptions and provides user feedback through flash attributes.
+     */
     @PostMapping("/remove")
     public String removeFromCart(@AuthenticationPrincipal UserDetails userDetails,
                                  @RequestParam Long recordId,
@@ -96,8 +113,12 @@ public class ShoppingCartController {
         return "redirect:/cart";
     }
 
+    /**
+     * Clear all items from the user's shopping cart.
+     * Provides a JSON response indicating the success or failure of the operation.
+     */
     @PostMapping("/clear")
-    @ResponseBody
+    @ResponseBody // Indicates that this method returns a JSON response instead of rendering a view.
     public ResponseEntity<String> clearCart(@AuthenticationPrincipal UserDetails userDetails) {
         logger.info("Attempting to clear cart for user: {}", userDetails.getUsername());
         try {
@@ -106,6 +127,8 @@ public class ShoppingCartController {
                 logger.error("User not found in database");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
             }
+
+            // Clear all items from the user's cart.
             shoppingCartService.clearCart(user);
             logger.info("Cart cleared successfully for user: {}", user.getUsername());
             return ResponseEntity.ok("Cart cleared successfully");
@@ -115,6 +138,10 @@ public class ShoppingCartController {
         }
     }
 
+    /**
+     * Retrieve the total cost of items in the user's shopping cart.
+     * Returns the total as a JSON response for dynamic updates in the UI.
+     */
     @GetMapping("/total")
     @ResponseBody
     public ResponseEntity<Double> getCartTotal(@AuthenticationPrincipal UserDetails userDetails) {
@@ -123,13 +150,16 @@ public class ShoppingCartController {
         return ResponseEntity.ok(total.doubleValue());
     }
 
+    /**
+     * Update the quantity of a specific item in the user's shopping cart.
+     * Ensures that quantities are valid and updates the cart accordingly.
+     */
     @PostMapping("/update-quantity")
     @ResponseBody
     public ResponseEntity<String> updateQuantity(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("recordId") Long recordId,
             @RequestParam("quantity") int quantity) {
-
         try {
             if (userDetails == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
@@ -153,11 +183,15 @@ public class ShoppingCartController {
         }
     }
 
+    /**
+     * Retrieve the total number of items in the user's shopping cart.
+     * Used for displaying the cart item count in the UI dynamically.
+     */
     @GetMapping("/count")
     @ResponseBody
     public ResponseEntity<Integer> getCartItemCount(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
-            return ResponseEntity.ok(0);
+            return ResponseEntity.ok(0); // Return 0 if the user is not authenticated.
         }
         User user = userService.findByUsername(userDetails.getUsername());
         int count = shoppingCartService.getCartItemCount(user);

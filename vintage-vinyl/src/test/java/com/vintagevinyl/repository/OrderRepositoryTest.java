@@ -82,6 +82,9 @@ public class OrderRepositoryTest {
         return order;
     }
 
+    /**
+     * Test case for saving and retrieving an order.
+     */
     @Test
     @DisplayName("Should save and retrieve an order")
     void shouldSaveAndRetrieveOrder() {
@@ -99,6 +102,9 @@ public class OrderRepositoryTest {
                 });
     }
 
+    /**
+     * Test case for finding orders by user.
+     */
     @Test
     @DisplayName("Should find orders by user")
     void shouldFindOrdersByUser() {
@@ -118,6 +124,9 @@ public class OrderRepositoryTest {
                 });
     }
 
+    /**
+     * Test case for finding orders by user ordered by date in descending order.
+     */
     @Test
     @DisplayName("Should find orders by user ordered by date")
     void shouldFindOrdersByUserOrderedByDate() {
@@ -140,6 +149,9 @@ public class OrderRepositoryTest {
                 .isSortedAccordingTo(Comparator.reverseOrder());
     }
 
+    /**
+     * Test case for finding orders with pagination.
+     */
     @Test
     @DisplayName("Should find orders with pagination")
     void shouldFindOrdersWithPagination() {
@@ -170,6 +182,9 @@ public class OrderRepositoryTest {
                 .isSortedAccordingTo(Comparator.reverseOrder());
     }
 
+    /**
+     * Test case for finding an order by its ID and user.
+     */
     @Test
     @DisplayName("Should find order by id and user")
     void shouldFindOrderByIdAndUser() {
@@ -188,6 +203,9 @@ public class OrderRepositoryTest {
         assertThat(foundOrder.get().getUser()).isEqualTo(testUser);
     }
 
+    /**
+     * Test case for finding an order along with its items.
+     */
     @Test
     @DisplayName("Should find order with items")
     void shouldFindOrderWithItems() {
@@ -208,6 +226,9 @@ public class OrderRepositoryTest {
                 });
     }
 
+    /**
+     * Test case for handling non-existent orders.
+     */
     @Test
     @DisplayName("Should handle non-existent order")
     void shouldHandleNonExistentOrder() {
@@ -217,6 +238,9 @@ public class OrderRepositoryTest {
         assertThat(orderRepository.findByIdWithItems(999L)).isEmpty();
     }
 
+    /**
+     * Test case for finding multiple orders for the same user.
+     */
     @Test
     @DisplayName("Should find multiple orders for same user")
     void shouldFindMultipleOrdersForSameUser() {

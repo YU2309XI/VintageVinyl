@@ -29,12 +29,12 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@SpringBootTest // Full application context
+@AutoConfigureMockMvc // Enable MockMvc for HTTP testing
 class AdminControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private MockMvc mockMvc; // This helps us simulate HTTP requests
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -69,8 +69,10 @@ class AdminControllerTest {
     @Nested
     @DisplayName("User Management Tests")
     class UserManagementTests {
-        // Existing tests remain the same...
 
+        /**
+         * Test case for editing user details.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should edit user successfully")
@@ -85,6 +87,9 @@ class AdminControllerTest {
                     .andExpect(content().string("User updated successfully"));
         }
 
+        /**
+         * Test case for deleting a user.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should delete user successfully")
@@ -97,6 +102,9 @@ class AdminControllerTest {
                     .andExpect(content().string("User deleted successfully"));
         }
 
+        /**
+         * Test case for deactivating a user.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should deactivate user successfully")
@@ -109,6 +117,9 @@ class AdminControllerTest {
                     .andExpect(content().string("User deactivated successfully"));
         }
 
+        /**
+         * Test case for locking a user account.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should lock user successfully")
@@ -121,6 +132,9 @@ class AdminControllerTest {
                     .andExpect(content().string("User locked successfully"));
         }
 
+        /**
+         * Test case for unlocking a user account.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should unlock user successfully")
@@ -137,8 +151,10 @@ class AdminControllerTest {
     @Nested
     @DisplayName("Inventory Management Tests")
     class InventoryManagementTests {
-        // Existing tests remain the same...
 
+        /**
+         * Test case for adding stock to a record.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should add stock successfully")
@@ -154,6 +170,9 @@ class AdminControllerTest {
             verify(recordService).addStock(1L, 5);
         }
 
+        /**
+         * Test case for retrieving records with low stock.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should get low stock records")
@@ -166,6 +185,9 @@ class AdminControllerTest {
                     .andExpect(content().json(objectMapper.writeValueAsString(lowStockRecords)));
         }
 
+        /**
+         * Test case for getting overall inventory status.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should get inventory status")
@@ -180,6 +202,9 @@ class AdminControllerTest {
                     .andExpect(jsonPath("$.outOfStockCount").value(0));
         }
 
+        /**
+         * Test case for updating the low stock threshold of a record.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should update stock threshold")
@@ -195,6 +220,9 @@ class AdminControllerTest {
             verify(recordService).updateLowStockThreshold(1L, 10);
         }
 
+        /**
+         * Test case for performing batch stock updates on records.
+         */
         @Test
         @WithMockUser(roles = "ADMIN")
         @DisplayName("Should perform batch stock update")

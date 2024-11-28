@@ -1,5 +1,9 @@
 $(document).ready(function() {
-    // CSRF token setup
+    /**
+     * CSRF Token setup
+     *
+     * Configures all outgoing AJAX requests to include the CSRF token for security.
+     */
     var token = $("meta[name='_csrf']").attr("content");
     var header = $("meta[name='_csrf_header']").attr("content");
 
@@ -7,12 +11,17 @@ $(document).ready(function() {
         xhr.setRequestHeader(header, token);
     });
 
-    // Add to Cart with stock check
+    /**
+     * Add to Cart functionality with stock check
+     *
+     * Verifies stock availability before adding the item to the cart.
+     * Provides feedback through button state changes and alerts.
+     */
     $('.add-to-cart').click(function() {
         var $button = $(this);
         var recordId = $button.data('record-id');
 
-        // Check stock status before adding to cart
+        // Check stock status
         $.get('/records/' + recordId + '/stock-status')
             .done(function(status) {
                 if (status === 'Out of Stock') {
@@ -22,17 +31,18 @@ $(document).ready(function() {
                     return;
                 }
 
+                // Proceed to add item to cart
                 $button.prop('disabled', true)
                     .html('<span class="spinner-border spinner-border-sm"></span> Adding...');
 
                 $.post('/cart/add', { recordId: recordId, quantity: 1 })
                     .done(function() {
                         alert('Record added to cart successfully!');
-                        updateCartCount(1);
+                        updateCartCount(1); // Increment cart count
                     })
                     .fail(function(xhr) {
                         if (xhr.status === 401) {
-                            window.location.href = '/login';
+                            window.location.href = '/login'; // Redirect if not logged in
                         } else if (xhr.status === 400) {
                             alert('Not enough stock available.');
                         } else {
@@ -46,7 +56,12 @@ $(document).ready(function() {
             });
     });
 
-    // Quick stock update functionality
+    /**
+     * Quick Stock Update functionality
+     *
+     * Opens a modal for updating the stock of a specific record and
+     * sends the updated stock value to the server.
+     */
     $('.quick-stock-update').click(function() {
         var recordId = $(this).data('record-id');
         var currentStock = $(this).data('current-stock');
@@ -67,21 +82,29 @@ $(document).ready(function() {
         })
             .done(function() {
                 $('#quickStockModal').modal('hide');
-                window.location.reload();
+                window.location.reload(); // Reload the page to reflect changes
             })
             .fail(function(xhr) {
                 alert('Failed to update stock: ' + xhr.responseText);
             });
     });
 
-    // Delete confirmation
+    /**
+     * Delete confirmation
+     *
+     * Displays a confirmation dialog before allowing the deletion of a record.
+     */
     $('.delete-record').click(function(e) {
         if (!confirm('Are you sure you want to delete this record? This action cannot be undone.')) {
-            e.preventDefault();
+            e.preventDefault(); // Cancel the delete action if not confirmed
         }
     });
 
-    // Wishlist functionality
+    /**
+     * Wishlist functionality
+     *
+     * Handles adding records to the wishlist with feedback on success or failure.
+     */
     $('form[action="/wishlist/add"]').submit(function(e) {
         e.preventDefault();
         var form = $(this);
@@ -92,21 +115,30 @@ $(document).ready(function() {
             })
             .fail(function(xhr) {
                 if (xhr.status === 401) {
-                    window.location.href = '/login';
+                    window.location.href = '/login'; // Redirect if not logged in
                 } else {
                     alert('Failed to add record to wishlist. Please try again.');
                 }
             });
     });
 
-    // Helper function to update cart count
+    /**
+     * Helper function to update the cart count
+     *
+     * @param {number} increment - The number to increment the cart count by.
+     */
     function updateCartCount(increment) {
         var cartCountSpan = $('.fa-shopping-cart').next('span');
         var currentCount = parseInt(cartCountSpan.text());
         cartCountSpan.text(currentCount + increment);
     }
 
-    // Periodic stock status refresh
+    /**
+     * Periodic stock status refresh
+     *
+     * Updates the stock status of each record and adjusts the UI elements
+     * (badges and buttons) accordingly.
+     */
     function refreshStockStatus() {
         $('.add-to-cart').each(function() {
             var $button = $(this);
@@ -124,7 +156,7 @@ $(document).ready(function() {
                         .addClass(badgeClass)
                         .text(status);
 
-                    // Update add to cart button
+                    // Update Add to Cart button
                     $button.prop('disabled', status === 'Out of Stock')
                         .html('<i class="fa fa-shopping-cart"></i> ' +
                             (status === 'Out of Stock' ? 'Out of Stock' : 'Add to Cart'));

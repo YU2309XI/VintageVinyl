@@ -15,18 +15,24 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    /**
+     * Configure the security filter chain for the application.
+     * This method defines the authorization rules, CSRF handling, and login/logout configuration.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Customize CSRF token handling by adding a request attribute for client-side use.
         CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
         requestHandler.setCsrfRequestAttributeName("_csrf");
 
         http
+                // Define authorization rules for endpoints
                 .authorizeHttpRequests(auth -> auth
-                        // Public access endpoints
+                        // Public endpoints that do not require authentication
                         .requestMatchers("/", "/register", "/login", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/records").permitAll()
 
-                        // Inventory management endpoints - Admin only
+                        // Admin-only endpoints for inventory management
                         .requestMatchers("/inventory",
                                 "/inventory/**",
                                 "/api/inventory/**",
@@ -35,48 +41,63 @@ public class SecurityConfig {
                                 "/api/records/stock/batch",
                                 "/api/records/low-stock").hasRole("ADMIN")
 
-                        // Existing admin endpoints
+                        // Other admin-restricted endpoints
                         .requestMatchers("/records/new", "/records/*/edit", "/records/*/delete").hasRole("ADMIN")
                         .requestMatchers("/admin/**", "/admin/orders/**").hasRole("ADMIN")
 
-                        // Endpoints requiring authentication
+                        // Endpoints requiring authentication for specific user actions
                         .requestMatchers("/account").authenticated()
                         .requestMatchers("/wishlist/add").authenticated()
                         .requestMatchers("/orders/**").authenticated()
                         .requestMatchers("/checkout", "/order-confirmation/**").authenticated()
                         .requestMatchers("/cart/**").authenticated()
 
+                        // Default rule: all other requests require authentication
                         .anyRequest().authenticated())
+                // Configure login page and behavior after successful or failed login
                 .formLogin(form -> form
-                        .loginPage("/login")
-                        .defaultSuccessUrl("/dashboard", true)
-                        .failureUrl("/login?error=true")
-                        .permitAll())
+                        .loginPage("/login") // Custom login page URL
+                        .defaultSuccessUrl("/dashboard", true) // Redirect after successful login
+                        .failureUrl("/login?error=true") // Redirect on login failure
+                        .permitAll()) // Allow access to the login page for everyone
+                // Configure logout behavior
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/login?logout")
-                        .permitAll())
+                        .logoutSuccessUrl("/login?logout") // Redirect after logout
+                        .permitAll()) // Allow logout for all users
+                // Enable "Remember Me" functionality for persistent sessions
                 .rememberMe(rememberMe -> rememberMe
-                        .key("uniqueAndSecret")
-                        .tokenValiditySeconds(86400))
+                        .key("uniqueAndSecret") // Key for generating persistent tokens
+                        .tokenValiditySeconds(86400)) // Token expiration in seconds (24 hours)
+                // CSRF protection configuration
                 .csrf(csrf -> csrf
-                        .csrfTokenRequestHandler(requestHandler)
-                        // CSRF exclusion list
+                        .csrfTokenRequestHandler(requestHandler) // Use custom CSRF request handler
+                        // Exclude specific endpoints from CSRF protection
                         .ignoringRequestMatchers("/cart/**",
                                 "/checkout",
                                 "/api/records/*/stock",
                                 "/api/records/*/threshold",
                                 "/api/records/stock/batch"));
 
-        return http.build();
+        return http.build(); // Build the security filter chain
     }
 
+    /**
+     * Configure the AuthenticationManager.
+     * This bean enables the application to use Spring Security's authentication mechanisms.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        // Retrieve the authentication manager from the default configuration
         return authenticationConfiguration.getAuthenticationManager();
     }
 
+    /**
+     * Configure the PasswordEncoder.
+     * BCryptPasswordEncoder is used for securely hashing passwords.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
+        // BCrypt is a strong hashing algorithm recommended for storing passwords securely.
         return new BCryptPasswordEncoder();
     }
 }
