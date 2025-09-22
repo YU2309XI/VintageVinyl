@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: '17 2 * * 2'
+    - cron: '17 2 * * 2'   
 
 permissions:
   contents: read
@@ -15,17 +15,27 @@ permissions:
 jobs:
   analyze:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Temurin JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: "maven"
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-            languages: java
+          languages: java
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+      - name: Build with Maven (no tests, test profile)
+        run: |
+          if [ -f mvnw ]; then chmod +x mvnw; fi
+          ./mvnw -B -ntp -Dspring.profiles.active=test -DskipTests package
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
