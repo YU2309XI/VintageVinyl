@@ -23,10 +23,23 @@ jobs:
           java-version: "17"
           cache: "maven"
 
-      - name: Build & run tests
+      - name: Make mvnw executable (if present)
         run: |
-          mvn -B -q -DskipTests=false test
-          mvn -B -q -DskipTests=false verify
+          if [ -f mvnw ]; then chmod +x mvnw; fi
+
+      - name: Build & run tests (H2 test profile)
+        run: |
+          ./mvnw -B -ntp -Dspring.profiles.active=test -DskipTests=false verify
+
+      - name: Print surefire reports on failure
+        if: failure()
+        run: |
+          echo "Dumping surefire reports (if any)"
+          for f in $(ls -1 **/target/surefire-reports/*.txt 2>/dev/null || true); do
+            echo "---- $f ----"
+            cat "$f"
+            echo
+          done
 
       - name: Upload surefire test reports
         if: always()
