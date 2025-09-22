@@ -33,5 +33,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: maven-test-reports
-          path:
-            **/target/surefire-reports/**
+          path: "**/target/surefire-reports/**"
