@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: '17 2 * * 2'   
+    - cron: '17 2 * * 2'
 
 permissions:
   contents: read
@@ -33,9 +33,7 @@ jobs:
           languages: java
 
       - name: Build with Maven (no tests, test profile)
-        run: |
-          if [ -f mvnw ]; then chmod +x mvnw; fi
-          ./mvnw -B -ntp -Dspring.profiles.active=test -DskipTests package
+        run: mvn -B -ntp -Dspring.profiles.active=test -DskipTests package
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
