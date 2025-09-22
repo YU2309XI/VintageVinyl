@@ -23,13 +23,11 @@ jobs:
           java-version: "17"
           cache: "maven"
 
-      - name: Make mvnw executable (if present)
-        run: |
-          if [ -f mvnw ]; then chmod +x mvnw; fi
+      - name: Maven version
+        run: mvn -v
 
       - name: Build & run tests (H2 test profile)
-        run: |
-          ./mvnw -B -ntp -Dspring.profiles.active=test -DskipTests=false verify
+        run: mvn -B -ntp -Dspring.profiles.active=test -DskipTests=false verify
 
       - name: Print surefire reports on failure
         if: failure()
