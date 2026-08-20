@@ -1,7 +1,5 @@
 # Vintage Vinyl
 
-![CI](https://github.com/Han1230c/VintageVinyl/actions/workflows/ci.yml/badge.svg)
-![CodeQL](https://github.com/Han1230c/VintageVinyl/actions/workflows/codeql.yml/badge.svg)
 
 
 A Spring Boot 3 (Java 21) e-commerce web app for a small record store. It supports browsing records, viewing details, user authentication, shopping cart, checkout & orders, wishlist, admin inventory management, and CSV bulk import. Server-side rendering is done with **Thymeleaf**; data access via **Spring Data JPA**; database is **MySQL**.
